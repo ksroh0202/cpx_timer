@@ -600,19 +600,21 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment:
               isNarrow ? CrossAxisAlignment.start : CrossAxisAlignment.end,
           children: [
-            _InfoChip(
-              label: '준비',
-              value: _formatSeconds(_prepRemaining),
+            Text(
+              '현재 단계',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: 8),
-            _InfoChip(
-              label: '시험',
-              value: _formatSeconds(_examRemaining),
-            ),
-            const SizedBox(height: 8),
-            _InfoChip(
-              label: '단계',
-              value: _currentStage?.label ?? '-',
+            const SizedBox(height: 6),
+            Text(
+              _currentStage?.label ?? '-',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         );
