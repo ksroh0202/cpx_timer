@@ -455,19 +455,6 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 30,
-        title: const SizedBox.shrink(),
-        centerTitle: false,
-        actions: [
-          if (_selectedTab == 1 && _records.isNotEmpty)
-            IconButton(
-              onPressed: _clearAllRecords,
-              icon: const Icon(Icons.delete_outline),
-              tooltip: '기록 전체 삭제',
-            ),
-        ],
-      ),
       body: SafeArea(child: pages[_selectedTab]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTab,
@@ -493,12 +480,12 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildTimerPage() {
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(6),
       children: [
         _buildStatusCard(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         _buildActionPanel(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         _buildStageSummaryCard(),
       ],
     );
@@ -542,7 +529,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               _currentStage?.label ?? '-',
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -552,12 +539,11 @@ class _HomePageState extends State<HomePage> {
         return Card(
           elevation: 0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -578,8 +564,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
+                Align(
+                  alignment: Alignment.topRight,
                   child: infoColumn,
                 ),
               ],
@@ -838,44 +824,67 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildHistoryPage() {
-    if (_records.isEmpty) {
-      return const Center(
-        child: Text(
-          '아직 저장된 기록이 없습니다.',
-          style: TextStyle(fontSize: 16),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _records.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final record = _records[index];
-        return Card(
-          elevation: 0,
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            title: Text(
-              _formatDateTime(record.endedAt),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text('${record.endType}  ·  ${formatSeconds(record.totalSeconds)}'),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ResultPage(record: record),
+    return Column(
+      children: [
+        if (_records.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: _clearAllRecords,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('전체 삭제'),
                 ),
-              );
-            },
+              ],
+            ),
           ),
-        );
-      },
+        Expanded(
+          child: _records.isEmpty
+              ? const Center(
+                  child: Text(
+                    '아직 저장된 기록이 없습니다.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  itemCount: _records.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final record = _records[index];
+                    return Card(
+                      elevation: 0,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        title: Text(
+                          _formatDateTime(record.endedAt),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            '${record.endType}  ·  ${formatSeconds(record.totalSeconds)}',
+                          ),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ResultPage(record: record),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }
