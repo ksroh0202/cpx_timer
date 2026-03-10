@@ -7,10 +7,9 @@ import '../models/practice_record.dart';
 import '../screens/result_page.dart';
 import '../services/record_storage.dart';
 import '../utils/formatters.dart';
-import '../widgets/info_chip.dart';
-import '../widgets/round_control_button.dart';
 import '../widgets/stage_row.dart';
-import '../utils/formatters.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_styles.dart';
 
 enum TimerPhase {
   idle,
@@ -455,306 +454,378 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      body: SafeArea(child: pages[_selectedTab]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedTab,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedTab = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.timer_outlined),
-            selectedIcon: Icon(Icons.timer),
-            label: '타이머',
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: pages[_selectedTab]),
+            _buildBottomNav(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimerPage() {
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 180,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFDAD7FF),
+                  Color(0xFFECEAFF),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.history),
-            label: '기록',
+        ),
+        ListView(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          children: [
+            _buildStatusCard(),
+            const SizedBox(height: 16),
+            _buildActionPanel(),
+            const SizedBox(height: 16),
+            _buildStageSummaryCard(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusCard() {
+    final progress = _phase == TimerPhase.prep || _phase == TimerPhase.pausedPrep
+        ? 1 - (_prepRemaining / prepTotalSeconds)
+        : 1 - (_examRemaining / examTotalSeconds);
+
+    return Container(
+      decoration: AppStyles.cardDecoration,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _statusText,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              _mainTimeText,
+              style: AppStyles.timerText,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              _currentStage?.label ?? _statusText,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: const Color(0xFFE5E1F5),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+            ),
+          ),
+          const SizedBox(height: 18),
+          _buildStageSegmentedControl(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStageSegmentedControl() {
+    Widget stageItem({
+      required String text,
+      required bool selected,
+      required VoidCallback? onTap,
+    }) {
+      return Expanded(
+        child: GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              gradient: selected
+                  ? const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    )
+                  : null,
+              color: selected ? null : Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: selected
+                      ? AppColors.primaryTextOn
+                      : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: AppStyles.softPillDecoration,
+      child: Row(
+        children: [
+          stageItem(
+            text: '병력',
+            selected: _currentStage == ExamStage.historyTaking && _isExamActive,
+            onTap: _isExamActive
+                ? () => _switchStage(ExamStage.historyTaking)
+                : null,
+          ),
+          stageItem(
+            text: '진찰',
+            selected: _currentStage == ExamStage.physicalExam && _isExamActive,
+            onTap: _isExamActive
+                ? () => _switchStage(ExamStage.physicalExam)
+                : null,
+          ),
+          stageItem(
+            text: '교육',
+            selected: _currentStage == ExamStage.patientEducation && _isExamActive,
+            onTap: _isExamActive
+                ? () => _switchStage(ExamStage.patientEducation)
+                : null,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimerPage() {
-    return ListView(
-      padding: const EdgeInsets.all(6),
-      children: [
-        _buildStatusCard(),
-        const SizedBox(height: 6),
-        _buildActionPanel(),
-        const SizedBox(height: 6),
-        _buildStageSummaryCard(),
-      ],
-    );
-  }
-
-  Widget _buildStatusCard() {
-    final isWarning = _phase == TimerPhase.exam && _examRemaining <= 120;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 380;
-
-        final timerText = FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Text(
-            _mainTimeText,
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: isNarrow ? 68 : 78,
-              fontWeight: FontWeight.w800,
-              color: isWarning ? Colors.red : null,
-              height: 1,
-            ),
-          ),
-        );
-
-        final infoColumn = Column(
-          crossAxisAlignment:
-              isNarrow ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-          children: [
-            Text(
-              '현재 단계',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _currentStage?.label ?? '-',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        );
-
-        return Card(
-          elevation: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _statusText,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: isWarning ? Colors.red : null,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        width: double.infinity,
-                        child: timerText,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: infoColumn,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildStageButtons() {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('단계 전환', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 12),
-            for (final stage in ExamStage.values) ...[
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.tonal(
-                  onPressed: _isExamActive ? () => _switchStage(stage) : null,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                  ),
-                  child: Text(
-                    stage.label +
-                        (_currentStage == stage && _isExamActive ? '  (현재)' : ''),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-              if (stage != ExamStage.values.last) const SizedBox(height: 10),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildStageSummaryCard() {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('단계별 누적 시간',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 14),
-            StageRow(
-              label: ExamStage.historyTaking.label,
-              value: formatSeconds(_previewStageSeconds(ExamStage.historyTaking)),
+    return Container(
+      decoration: AppStyles.cardDecoration,
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '단계별 누적 시간',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
-            const Divider(height: 20),
-            StageRow(
-              label: ExamStage.physicalExam.label,
-              value: formatSeconds(_previewStageSeconds(ExamStage.physicalExam)),
-            ),
-            const Divider(height: 20),
-            StageRow(
-              label: ExamStage.patientEducation.label,
-              value: formatSeconds(_previewStageSeconds(ExamStage.patientEducation)),
-            ),
-            const Divider(height: 20),
-            StageRow(
-              label: '총 사용 시간',
-              value: formatSeconds(_examElapsed),
-              isBold: true,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          StageRow(
+            label: ExamStage.historyTaking.label,
+            value: formatSeconds(_previewStageSeconds(ExamStage.historyTaking)),
+          ),
+          const Divider(color: AppColors.line, height: 1),
+          StageRow(
+            label: ExamStage.physicalExam.label,
+            value: formatSeconds(_previewStageSeconds(ExamStage.physicalExam)),
+          ),
+          const Divider(color: AppColors.line, height: 1),
+          StageRow(
+            label: ExamStage.patientEducation.label,
+            value: formatSeconds(_previewStageSeconds(ExamStage.patientEducation)),
+          ),
+          const Divider(color: AppColors.line, height: 1),
+          StageRow(
+            label: '총 사용 시간',
+            value: formatSeconds(_examElapsed),
+            isBold: true,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildActionPanel() {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '단계 전환',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: RoundControlButton(
-                    icon: Icons.question_answer,
-                    label: '병력',
-                    onTap: _isExamActive
-                        ? () => _switchStage(ExamStage.historyTaking)
-                        : null,
-                    isSelected:
-                        _currentStage == ExamStage.historyTaking && _isExamActive,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RoundControlButton(
-                    icon: Icons.medical_services,
-                    label: '진찰',
-                    onTap: _isExamActive
-                        ? () => _switchStage(ExamStage.physicalExam)
-                        : null,
-                    isSelected:
-                        _currentStage == ExamStage.physicalExam && _isExamActive,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RoundControlButton(
-                    icon: Icons.record_voice_over,
-                    label: '교육',
-                    onTap: _isExamActive
-                        ? () => _switchStage(ExamStage.patientEducation)
-                        : null,
-                    isSelected: _currentStage == ExamStage.patientEducation &&
-                        _isExamActive,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            const Divider(height: 16),
-            const SizedBox(height: 2),
-            const Text(
-              '조작',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: RoundControlButton(
-                    icon: Icons.play_arrow,
-                    label: '시작',
-                    onTap: !_isRunning && !_isPaused ? _startSession : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RoundControlButton(
-                    icon: _isPaused ? Icons.play_circle : Icons.pause,
-                    label: _isPaused ? '재개' : '일시정지',
-                    onTap:
-                        _isRunning ? _pauseSession : (_isPaused ? _resumeSession : null),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RoundControlButton(
-                    icon: Icons.refresh,
-                    label: '초기화',
-                    onTap: (_isRunning || _isPaused || _phase == TimerPhase.finished)
-                        ? _confirmReset
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: RoundControlButton(
-                    icon: (_phase == TimerPhase.prep ||
-                            _phase == TimerPhase.pausedPrep)
-                        ? Icons.skip_next
-                        : Icons.stop,
-                    label: (_phase == TimerPhase.prep ||
-                            _phase == TimerPhase.pausedPrep)
-                        ? '바로 시작'
-                        : '종료',
-                    onTap: (_phase == TimerPhase.prep ||
-                            _phase == TimerPhase.pausedPrep)
-                        ? _skipPrepAndStartExam
-                        : (_isExamActive ? _confirmEndEarly : null),
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          flex: 6,
+          child: _buildStartPauseButton(
+            onTap: _primaryButtonAction(),
+            icon: _primaryButtonIcon(),
+            label: _primaryButtonLabel(),
+          ),
         ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 4,
+          child: _buildSecondaryControlPill(),
+        ),
+      ],
+    );
+  }
+
+  String _primaryButtonLabel() {
+    if (_phase == TimerPhase.pausedPrep || _phase == TimerPhase.pausedExam) {
+      return '재개';
+    }
+
+    if (_phase == TimerPhase.prep) {
+      return '바로 시작';
+    }
+
+    if (_phase == TimerPhase.exam) {
+      return '일시정지';
+    }
+
+    return '시작';
+  }
+
+  IconData _primaryButtonIcon() {
+    if (_phase == TimerPhase.pausedPrep || _phase == TimerPhase.pausedExam) {
+      return Icons.play_arrow_rounded;
+    }
+
+    if (_phase == TimerPhase.prep) {
+      return Icons.skip_next_rounded;
+    }
+
+    if (_phase == TimerPhase.exam) {
+      return Icons.pause_rounded;
+    }
+
+    return Icons.play_arrow_rounded;
+  }
+
+  VoidCallback? _primaryButtonAction() {
+    if (_phase == TimerPhase.pausedPrep || _phase == TimerPhase.pausedExam) {
+      return _resumeSession;
+    }
+
+    if (_phase == TimerPhase.prep) {
+      return _skipPrepAndStartExam;
+    }
+
+    if (_phase == TimerPhase.exam) {
+      return _pauseSession;
+    }
+
+    if (_phase == TimerPhase.idle || _phase == TimerPhase.finished) {
+      return _startSession;
+    }
+
+    return null;
+  }
+
+  Widget _buildStartPauseButton({
+    required VoidCallback? onTap,
+    required IconData icon,
+    required String label,
+  }) {
+    final disabled = onTap == null;
+
+    return Opacity(
+      opacity: disabled ? 0.45 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Ink(
+            height: 64,
+            decoration: AppStyles.primaryPillDecoration,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 26,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: AppStyles.buttonText.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryControlPill() {
+    final canReset = _isRunning || _isPaused || _phase == TimerPhase.finished;
+    final canStop = _isExamActive;
+
+    Widget actionButton({
+      required IconData icon,
+      required VoidCallback? onTap,
+    }) {
+      final enabled = onTap != null;
+
+      return Expanded(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Center(
+            child: Opacity(
+              opacity: enabled ? 1 : 0.4,
+              child: Icon(
+                icon,
+                size: 24,
+                color: AppColors.iconSoft,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      height: 64,
+      decoration: AppStyles.softPillDecoration,
+      child: Row(
+        children: [
+          actionButton(
+            icon: Icons.refresh_rounded,
+            onTap: canReset ? _confirmReset : null,
+          ),
+          Container(
+            width: 1,
+            height: 28,
+            color: AppColors.line,
+          ),
+          actionButton(
+            icon: Icons.stop_rounded,
+            onTap: canStop ? _confirmEndEarly : null,
+          ),
+        ],
       ),
     );
   }
@@ -770,55 +841,96 @@ class _HomePageState extends State<HomePage> {
     return base;
   }
 
-  Widget _buildControlButtons() {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              '조작',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+  Widget _buildBottomNav() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: AppStyles.cardDecoration,
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTab = 0;
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _selectedTab == 0
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.timer_outlined,
+                      color: _selectedTab == 0
+                          ? Colors.white
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '타이머',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: _selectedTab == 0
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                RoundControlButton(
-                  icon: Icons.play_arrow,
-                  label: '시작',
-                  onTap: !_isRunning && !_isPaused ? _startSession : null,
-                ),
-                RoundControlButton(
-                  icon: _isPaused ? Icons.play_circle : Icons.pause,
-                  label: _isPaused ? '재개' : '일시정지',
-                  onTap: _isRunning ? _pauseSession : (_isPaused ? _resumeSession : null),
-                ),
-                RoundControlButton(
-                  icon: Icons.refresh,
-                  label: '초기화',
-                  onTap: (_isRunning || _isPaused || _phase == TimerPhase.finished)
-                      ? _confirmReset
-                      : null,
-                ),
-                RoundControlButton(
-                  icon: (_phase == TimerPhase.prep || _phase == TimerPhase.pausedPrep)
-                      ? Icons.skip_next
-                      : Icons.stop,
-                  label: (_phase == TimerPhase.prep || _phase == TimerPhase.pausedPrep)
-                      ? '바로 시작'
-                      : '종료',
-                  onTap: (_phase == TimerPhase.prep || _phase == TimerPhase.pausedPrep)
-                      ? _skipPrepAndStartExam
-                      : (_isExamActive ? _confirmEndEarly : null),
-                ),
-              ],
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedTab = 1;
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _selectedTab == 1
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.history_rounded,
+                      color: _selectedTab == 1
+                          ? Colors.white
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '기록',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: _selectedTab == 1
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
