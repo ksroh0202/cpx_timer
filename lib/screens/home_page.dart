@@ -514,11 +514,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(
             _statusText,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 20),
           Center(
@@ -531,9 +527,8 @@ class _HomePageState extends State<HomePage> {
           Center(
             child: Text(
               _currentStage?.label ?? _statusText,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 18,
                 color: AppColors.textMuted,
               ),
             ),
@@ -566,7 +561,7 @@ class _HomePageState extends State<HomePage> {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               gradient: selected
                   ? const LinearGradient(
@@ -581,9 +576,9 @@ class _HomePageState extends State<HomePage> {
             child: Center(
               child: Text(
                 text,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                   color: selected
                       ? AppColors.primaryTextOn
                       : AppColors.textPrimary,
@@ -633,12 +628,11 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '단계별 누적 시간',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 14),
@@ -877,9 +871,9 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 6),
                   Text(
                     '타이머',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: _selectedTab == 0
                           ? AppColors.primary
                           : AppColors.textPrimary,
@@ -918,10 +912,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 6),
                   Text(
                     '기록',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _selectedTab == 1
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: _selectedTab == 0
                           ? AppColors.primary
                           : AppColors.textPrimary,
                     ),
@@ -954,10 +948,10 @@ class _HomePageState extends State<HomePage> {
           ),
         Expanded(
           child: _records.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
                     '아직 저장된 기록이 없습니다.',
-                    style: TextStyle(fontSize: 16),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 )
               : ListView.separated(
@@ -975,7 +969,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                         title: Text(
                           _formatDateTime(record.endedAt),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 6),

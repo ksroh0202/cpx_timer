@@ -25,9 +25,10 @@ class AppStyles {
   );
 
   static const timerText = TextStyle(
-    fontSize: 56,
+    fontSize: 50,
     fontWeight: FontWeight.w500,
     letterSpacing: -1,
+    color: AppColors.textPrimary,
   );
 
   static const buttonText = TextStyle(
