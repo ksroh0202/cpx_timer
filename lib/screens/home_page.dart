@@ -456,7 +456,9 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CPX Timer'),
+        toolbarHeight: 30,
+        title: const SizedBox.shrink(),
+        centerTitle: false,
         actions: [
           if (_selectedTab == 1 && _records.isNotEmpty)
             IconButton(
@@ -516,7 +518,7 @@ class _HomePageState extends State<HomePage> {
             _mainTimeText,
             maxLines: 1,
             style: TextStyle(
-              fontSize: isNarrow ? 72 : 84,
+              fontSize: isNarrow ? 68 : 78,
               fontWeight: FontWeight.w800,
               color: isWarning ? Colors.red : null,
               height: 1,
@@ -551,58 +553,37 @@ class _HomePageState extends State<HomePage> {
           elevation: 0,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            child: isNarrow
-                ? Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _statusText,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: isWarning ? Colors.red : null,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       SizedBox(
                         width: double.infinity,
                         child: timerText,
                       ),
-                      const SizedBox(height: 14),
-                      infoColumn,
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _statusText,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: isWarning ? Colors.red : null,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              child: timerText,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 2,
-                        child: infoColumn,
-                      ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: infoColumn,
+                ),
+              ],
+            ),
           ),
         );
       },
