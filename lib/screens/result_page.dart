@@ -1,4 +1,3 @@
-// 저장된 연습 결과 1건의 상세 정보를 보여준다.
 import 'package:flutter/material.dart';
 
 import '../models/practice_record.dart';
@@ -15,9 +14,7 @@ class ResultPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('결과 상세'),
-      ),
+      appBar: AppBar(title: const Text('결과 상세')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -26,7 +23,18 @@ class ResultPage extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Text('연습 결과', style: textTheme.titleLarge),
+                  Text(
+                    record.examName,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${record.subject} · ${record.topic}',
+                    style: textTheme.bodyLarge,
+                  ),
                   const SizedBox(height: 18),
                   Text(
                     formatSeconds(record.totalSeconds),

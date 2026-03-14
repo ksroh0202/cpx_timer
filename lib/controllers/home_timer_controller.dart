@@ -1,6 +1,6 @@
-// 홈 화면의 타이머 흐름, 단계 누적, 기록 저장/로드를 관리한다.
 import 'package:flutter/foundation.dart';
 
+import '../core/constants/exam_options.dart';
 import '../core/constants/timer_constants.dart';
 import '../core/enums/exam_stage.dart';
 import '../core/enums/timer_phase.dart';
@@ -10,9 +10,8 @@ import '../services/record_storage.dart';
 import '../services/timer_service.dart';
 
 class HomeTimerController extends ChangeNotifier {
-  HomeTimerController({
-    TimerService? timerService,
-  }) : _timerService = timerService ?? TimerService();
+  HomeTimerController({TimerService? timerService})
+    : _timerService = timerService ?? TimerService();
 
   final TimerService _timerService;
 
@@ -35,10 +34,25 @@ class HomeTimerController extends ChangeNotifier {
     await RecordStorage.saveRecords(_state.records);
   }
 
-  void startSession() {
+  Future<void> deleteRecord(String id) async {
+    _state = _state.copyWith(
+      records: _state.records.where((record) => record.id != id).toList(),
+    );
+    notifyListeners();
+    await RecordStorage.saveRecords(_state.records);
+  }
+
+  void startSession({String? examName, String? subject, String? topic}) {
+    final normalizedSubject = sanitizeSubject(subject);
+    final normalizedExamName = sanitizeExamName(examName);
+    final normalizedTopic = sanitizeTopicForSubject(normalizedSubject, topic);
+
     _timerService.cancelTimer();
     _state = TimerSessionState.initial().copyWith(
       phase: TimerPhase.prep,
+      sessionExamName: normalizedExamName,
+      sessionSubject: normalizedSubject,
+      sessionTopic: normalizedTopic,
       records: _state.records,
     );
     notifyListeners();
@@ -46,7 +60,8 @@ class HomeTimerController extends ChangeNotifier {
   }
 
   void skipPrepAndStartExam() {
-    if (_state.phase != TimerPhase.prep && _state.phase != TimerPhase.pausedPrep) {
+    if (_state.phase != TimerPhase.prep &&
+        _state.phase != TimerPhase.pausedPrep) {
       return;
     }
     _startExam();
@@ -97,12 +112,16 @@ class HomeTimerController extends ChangeNotifier {
     _timerService.cancelTimer();
     _timerService.playSound('end.mp3');
 
-    if (_state.phase == TimerPhase.exam || _state.phase == TimerPhase.pausedExam) {
+    if (_state.phase == TimerPhase.exam ||
+        _state.phase == TimerPhase.pausedExam) {
       _commitCurrentStageTime();
     }
 
     final record = PracticeRecord(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      examName: _state.sessionExamName,
+      subject: _state.sessionSubject,
+      topic: _state.sessionTopic,
       endedAt: DateTime.now(),
       totalSeconds: _state.examElapsed,
       historySeconds: _state.stageSeconds[ExamStage.historyTaking] ?? 0,

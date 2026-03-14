@@ -1,7 +1,10 @@
-// 한 번의 연습 결과를 저장하기 위한 데이터 묶음입니다.
-// 저장되는 CPX 연습 결과 1건의 구조를 표현한다.
+import '../core/constants/exam_options.dart';
+
 class PracticeRecord {
   final String id;
+  final String examName;
+  final String subject;
+  final String topic;
   final DateTime endedAt;
   final int totalSeconds;
   final int historySeconds;
@@ -11,6 +14,9 @@ class PracticeRecord {
 
   const PracticeRecord({
     required this.id,
+    required this.examName,
+    required this.subject,
+    required this.topic,
     required this.endedAt,
     required this.totalSeconds,
     required this.historySeconds,
@@ -19,10 +25,12 @@ class PracticeRecord {
     required this.endType,
   });
 
-  // 객체를 저장하기 쉬운 Map 형태로 바꿉니다.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'examName': examName,
+      'subject': subject,
+      'topic': topic,
       'endedAt': endedAt.toIso8601String(),
       'totalSeconds': totalSeconds,
       'historySeconds': historySeconds,
@@ -32,16 +40,79 @@ class PracticeRecord {
     };
   }
 
-  // 저장된 Map 데이터를 다시 PracticeRecord 객체로 복원합니다.
   factory PracticeRecord.fromMap(Map<String, dynamic> map) {
+    final endedAt =
+        DateTime.tryParse(map['endedAt']?.toString() ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+    final examName = sanitizeExamName(map['examName']?.toString());
+    final subject = sanitizeSubject(map['subject']?.toString());
+    final topic = sanitizeTopicForSubject(subject, map['topic']?.toString());
+    final totalSeconds = _readInt(map['totalSeconds']);
+    final historySeconds = _readInt(map['historySeconds']);
+    final physicalSeconds = _readInt(map['physicalSeconds']);
+    final educationSeconds = _readInt(map['educationSeconds']);
+    final endType = map['endType']?.toString() ?? '정상 종료';
+    final id = _readId(
+      map['id'],
+      endedAt: endedAt,
+      totalSeconds: totalSeconds,
+      historySeconds: historySeconds,
+      physicalSeconds: physicalSeconds,
+      educationSeconds: educationSeconds,
+      endType: endType,
+      examName: examName,
+      subject: subject,
+      topic: topic,
+    );
+
     return PracticeRecord(
-      id: map['id'],
-      endedAt: DateTime.parse(map['endedAt']),
-      totalSeconds: map['totalSeconds'],
-      historySeconds: map['historySeconds'],
-      physicalSeconds: map['physicalSeconds'],
-      educationSeconds: map['educationSeconds'],
-      endType: map['endType'],
+      id: id,
+      examName: examName,
+      subject: subject,
+      topic: topic,
+      endedAt: endedAt,
+      totalSeconds: totalSeconds,
+      historySeconds: historySeconds,
+      physicalSeconds: physicalSeconds,
+      educationSeconds: educationSeconds,
+      endType: endType,
     );
   }
+}
+
+int _readInt(dynamic value) {
+  if (value is int) {
+    return value;
+  }
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+String _readId(
+  dynamic rawId, {
+  required DateTime endedAt,
+  required int totalSeconds,
+  required int historySeconds,
+  required int physicalSeconds,
+  required int educationSeconds,
+  required String endType,
+  required String examName,
+  required String subject,
+  required String topic,
+}) {
+  final id = rawId?.toString().trim() ?? '';
+  if (id.isNotEmpty) {
+    return id;
+  }
+
+  return [
+    endedAt.toIso8601String(),
+    totalSeconds,
+    historySeconds,
+    physicalSeconds,
+    educationSeconds,
+    endType,
+    examName,
+    subject,
+    topic,
+  ].join('|');
 }

@@ -1,7 +1,7 @@
-// 저장된 연습 기록 목록을 보여주고 상세 화면 진입을 처리한다.
 import 'package:flutter/material.dart';
 
 import '../models/practice_record.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_styles.dart';
 import '../utils/formatters.dart';
 
@@ -10,11 +10,13 @@ class RecordsPage extends StatelessWidget {
     super.key,
     required this.records,
     required this.onOpenRecord,
+    required this.onDeleteRecord,
     required this.onClearAll,
   });
 
   final List<PracticeRecord> records;
   final ValueChanged<PracticeRecord> onOpenRecord;
+  final ValueChanged<PracticeRecord> onDeleteRecord;
   final VoidCallback onClearAll;
 
   @override
@@ -46,7 +48,8 @@ class RecordsPage extends StatelessWidget {
               : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                   itemCount: records.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final record = records[index];
                     return Card(
@@ -55,23 +58,48 @@ class RecordsPage extends StatelessWidget {
                         borderRadius: AppStyles.cardRadius,
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        contentPadding: const EdgeInsets.fromLTRB(
+                          16,
+                          12,
+                          8,
+                          12,
                         ),
                         title: Text(
-                          formatDateTime(record.endedAt),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          record.examName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            '${record.endType}  ·  ${formatSeconds(record.totalSeconds)}',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${record.subject} · ${record.topic}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${formatDateTime(record.endedAt)} · ${formatSeconds(record.totalSeconds)} · ${record.endType}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
                           ),
                         ),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: '기록 삭제',
+                          onPressed: () => onDeleteRecord(record),
+                        ),
                         onTap: () => onOpenRecord(record),
                       ),
                     );

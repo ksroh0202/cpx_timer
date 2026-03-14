@@ -1,7 +1,7 @@
-// 홈 탭과 기록 탭을 전환하며 컨트롤러를 화면에 연결하는 메인 페이지다.
 import 'package:flutter/material.dart';
 
 import '../controllers/home_timer_controller.dart';
+import '../core/constants/exam_options.dart';
 import '../core/enums/exam_stage.dart';
 import '../core/enums/timer_phase.dart';
 import '../models/practice_record.dart';
@@ -23,7 +23,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final HomeTimerController _controller = HomeTimerController();
+  final TextEditingController _examNameController = TextEditingController();
+
   int _selectedTab = 0;
+  String _selectedSubject = defaultSubject;
+  String _selectedTopic = defaultTopic;
+  bool _hasSelectedSubject = false;
+  bool _hasSelectedTopic = false;
 
   @override
   void initState() {
@@ -35,6 +41,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _examNameController.dispose();
     _controller.disposeController();
     _controller.dispose();
     super.dispose();
@@ -42,11 +49,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _openResultPage(PracticeRecord record) async {
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ResultPage(record: record),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ResultPage(record: record)));
   }
 
   Future<void> _confirmReset() async {
@@ -81,7 +86,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('시험 종료'),
-          content: const Text('시험을 조기 종료할까요? 현재까지의 시간이 저장됩니다.'),
+          content: const Text('시험을 조기 종료할까요? 현재까지의 시간은 저장됩니다.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -127,6 +132,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _confirmDeleteRecord(PracticeRecord record) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('기록 삭제'),
+          content: Text('"${record.examName}" 기록을 삭제할까요?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('삭제'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      await _controller.deleteRecord(record.id);
+    }
+  }
+
   void _showTwoMinuteAlert() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -139,6 +170,89 @@ class _HomePageState extends State<HomePage> {
 
   void _switchStageByIndex(int index) {
     _controller.switchStage(ExamStage.values[index]);
+  }
+
+  void _updateSubject(String? value) {
+    setState(() {
+      _selectedSubject = sanitizeSubject(value);
+      _selectedTopic = defaultTopic;
+      _hasSelectedSubject = true;
+      _hasSelectedTopic = false;
+    });
+  }
+
+  void _updateTopic(String? value) {
+    setState(() {
+      _selectedTopic = sanitizeTopicForSubject(_selectedSubject, value);
+      _hasSelectedTopic = true;
+    });
+  }
+
+  Future<void> _pickSubject() async {
+    final selected = await _showOptionPicker(
+      title: '시험 과목',
+      options: examSubjects,
+      currentValue: _selectedSubject,
+    );
+    if (selected != null) {
+      _updateSubject(selected);
+    }
+  }
+
+  Future<void> _pickTopic() async {
+    final selected = await _showOptionPicker(
+      title: '시험 주제',
+      options: topicsForSubject(_selectedSubject),
+      currentValue: _selectedTopic,
+    );
+    if (selected != null) {
+      _updateTopic(selected);
+    }
+  }
+
+  Future<String?> _showOptionPicker({
+    required String title,
+    required List<String> options,
+    required String currentValue,
+  }) {
+    return showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              for (final option in options)
+                ListTile(
+                  title: Text(option),
+                  trailing: option == currentValue
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(option),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _startSession() {
+    _controller.startSession(
+      examName: _examNameController.text,
+      subject: _selectedSubject,
+      topic: _selectedTopic,
+    );
   }
 
   String _primaryButtonLabel(TimerSessionState state) {
@@ -190,7 +304,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (state.phase == TimerPhase.idle || state.phase == TimerPhase.finished) {
-      return _controller.startSession;
+      return _startSession;
     }
 
     return null;
@@ -205,39 +319,41 @@ class _HomePageState extends State<HomePage> {
 
         return Scaffold(
           body: SafeArea(
-            child: Column(
-              children: [
-                if (_selectedTab == 0)
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: _TimerTab(
-                      state: state,
-                      controller: _controller,
-                      onReset: _confirmReset,
-                      onStop: _confirmEndEarly,
-                      primaryAction: _primaryButtonAction(state),
-                      primaryIcon: _primaryButtonIcon(state),
-                      primaryLabel: _primaryButtonLabel(state),
-                      onStageSelected: _switchStageByIndex,
-                    ),
+            bottom: false,
+            child: _selectedTab == 0
+                ? _TimerTab(
+                    state: state,
+                    controller: _controller,
+                    examNameController: _examNameController,
+                    selectedSubject: _selectedSubject,
+                    selectedTopic: _selectedTopic,
+                    hasSelectedSubject: _hasSelectedSubject,
+                    hasSelectedTopic: _hasSelectedTopic,
+                    onSubjectTap: _pickSubject,
+                    onTopicTap: _pickTopic,
+                    onReset: _confirmReset,
+                    onStop: _confirmEndEarly,
+                    primaryAction: _primaryButtonAction(state),
+                    primaryIcon: _primaryButtonIcon(state),
+                    primaryLabel: _primaryButtonLabel(state),
+                    onStageSelected: _switchStageByIndex,
                   )
-                else
-                  Expanded(
-                    child: RecordsPage(
-                      records: state.records,
-                      onOpenRecord: _openResultPage,
-                      onClearAll: _confirmClearAllRecords,
-                    ),
+                : RecordsPage(
+                    records: state.records,
+                    onOpenRecord: _openResultPage,
+                    onDeleteRecord: _confirmDeleteRecord,
+                    onClearAll: _confirmClearAllRecords,
                   ),
-                _BottomNav(
-                  selectedTab: _selectedTab,
-                  onTabChanged: (index) {
-                    setState(() {
-                      _selectedTab = index;
-                    });
-                  },
-                ),
-              ],
+          ),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: _BottomNav(
+              selectedTab: _selectedTab,
+              onTabChanged: (index) {
+                setState(() {
+                  _selectedTab = index;
+                });
+              },
             ),
           ),
         );
@@ -250,6 +366,13 @@ class _TimerTab extends StatelessWidget {
   const _TimerTab({
     required this.state,
     required this.controller,
+    required this.examNameController,
+    required this.selectedSubject,
+    required this.selectedTopic,
+    required this.hasSelectedSubject,
+    required this.hasSelectedTopic,
+    required this.onSubjectTap,
+    required this.onTopicTap,
     required this.onReset,
     required this.onStop,
     required this.primaryAction,
@@ -260,6 +383,13 @@ class _TimerTab extends StatelessWidget {
 
   final TimerSessionState state;
   final HomeTimerController controller;
+  final TextEditingController examNameController;
+  final String selectedSubject;
+  final String selectedTopic;
+  final bool hasSelectedSubject;
+  final bool hasSelectedTopic;
+  final VoidCallback onSubjectTap;
+  final VoidCallback onTopicTap;
   final VoidCallback onReset;
   final VoidCallback onStop;
   final VoidCallback? primaryAction;
@@ -288,6 +418,13 @@ class _TimerTab extends StatelessWidget {
           children: [
             TimerDisplayCard(
               state: state,
+              examNameController: examNameController,
+              selectedSubject: selectedSubject,
+              selectedTopic: selectedTopic,
+              hasSelectedSubject: hasSelectedSubject,
+              hasSelectedTopic: hasSelectedTopic,
+              onSubjectTap: onSubjectTap,
+              onTopicTap: onTopicTap,
               onStageSelected: onStageSelected,
             ),
             const SizedBox(height: 12),
@@ -297,7 +434,10 @@ class _TimerTab extends StatelessWidget {
               primaryLabel: primaryLabel,
               onReset: onReset,
               onStop: onStop,
-              canReset: state.isRunning || state.isPaused || state.phase == TimerPhase.finished,
+              canReset:
+                  state.isRunning ||
+                  state.isPaused ||
+                  state.phase == TimerPhase.finished,
               canStop: state.isExamActive,
             ),
             const SizedBox(height: 12),

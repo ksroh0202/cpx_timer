@@ -1,4 +1,4 @@
-// 홈 타이머 화면에 필요한 현재 세션 상태 스냅샷을 보관한다.
+import '../core/constants/exam_options.dart';
 import '../core/constants/timer_constants.dart';
 import '../core/enums/exam_stage.dart';
 import '../core/enums/timer_phase.dart';
@@ -6,6 +6,9 @@ import 'practice_record.dart';
 
 class TimerSessionState {
   final TimerPhase phase;
+  final String sessionExamName;
+  final String sessionSubject;
+  final String sessionTopic;
   final int prepRemaining;
   final int examRemaining;
   final ExamStage? currentStage;
@@ -16,6 +19,9 @@ class TimerSessionState {
 
   const TimerSessionState({
     required this.phase,
+    required this.sessionExamName,
+    required this.sessionSubject,
+    required this.sessionTopic,
     required this.prepRemaining,
     required this.examRemaining,
     required this.currentStage,
@@ -28,13 +34,14 @@ class TimerSessionState {
   factory TimerSessionState.initial() {
     return TimerSessionState(
       phase: TimerPhase.idle,
+      sessionExamName: defaultExamName,
+      sessionSubject: defaultSubject,
+      sessionTopic: defaultTopic,
       prepRemaining: TimerConstants.prepTotalSeconds,
       examRemaining: TimerConstants.examTotalSeconds,
       currentStage: null,
       examElapsedAtStageStart: 0,
-      stageSeconds: {
-        for (final stage in ExamStage.values) stage: 0,
-      },
+      stageSeconds: {for (final stage in ExamStage.values) stage: 0},
       records: const [],
       twoMinuteAlertShown: false,
     );
@@ -42,6 +49,9 @@ class TimerSessionState {
 
   TimerSessionState copyWith({
     TimerPhase? phase,
+    String? sessionExamName,
+    String? sessionSubject,
+    String? sessionTopic,
     int? prepRemaining,
     int? examRemaining,
     ExamStage? currentStage,
@@ -53,9 +63,14 @@ class TimerSessionState {
   }) {
     return TimerSessionState(
       phase: phase ?? this.phase,
+      sessionExamName: sessionExamName ?? this.sessionExamName,
+      sessionSubject: sessionSubject ?? this.sessionSubject,
+      sessionTopic: sessionTopic ?? this.sessionTopic,
       prepRemaining: prepRemaining ?? this.prepRemaining,
       examRemaining: examRemaining ?? this.examRemaining,
-      currentStage: clearCurrentStage ? null : currentStage ?? this.currentStage,
+      currentStage: clearCurrentStage
+          ? null
+          : currentStage ?? this.currentStage,
       examElapsedAtStageStart:
           examElapsedAtStageStart ?? this.examElapsedAtStageStart,
       stageSeconds: stageSeconds ?? this.stageSeconds,
