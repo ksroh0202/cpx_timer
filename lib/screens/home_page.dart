@@ -448,16 +448,19 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      _buildTimerPage(),
-      _buildHistoryPage(),
-    ];
-
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(child: pages[_selectedTab]),
+            if (_selectedTab == 0)
+              Flexible(
+                fit: FlexFit.loose,
+                child: _buildTimerPage(),
+              )
+            else
+              Expanded(
+                child: _buildHistoryPage(),
+              ),
             _buildBottomNav(),
           ],
         ),
@@ -480,12 +483,13 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
           children: [
             _buildStatusCard(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildActionPanel(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildStageSummaryCard(),
           ],
         ),
@@ -500,15 +504,10 @@ class _HomePageState extends State<HomePage> {
 
     return Container(
       decoration: AppStyles.cardDecoration,
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _statusText,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 20),
           Center(
             child: Text(
               _mainTimeText,
@@ -827,8 +826,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBottomNav() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: AppStyles.cardDecoration,
       child: Row(
         children: [
@@ -843,8 +842,8 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: _selectedTab == 0
                           ? AppColors.primary
@@ -853,16 +852,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: Icon(
                       Icons.timer_outlined,
+                      size: 22,
                       color: _selectedTab == 0
                           ? AppColors.primaryTextOn
                           : AppColors.textMuted,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     '타이머',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: _selectedTab == 0
                           ? AppColors.primary
@@ -884,8 +884,8 @@ class _HomePageState extends State<HomePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: _selectedTab == 1
                           ? AppColors.primary
@@ -894,16 +894,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: Icon(
                       Icons.history_rounded,
+                      size: 22,
                       color: _selectedTab == 1
                           ? AppColors.primaryTextOn
                           : AppColors.textMuted,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     '기록',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: _selectedTab == 0
                           ? AppColors.primary
