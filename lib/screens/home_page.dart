@@ -396,7 +396,7 @@ class _HomePageState extends State<HomePage> {
 
   void _showTwoMinuteAlert() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('시험 종료 2분 전입니다.'),
         duration: Duration(seconds: 3),
       ),
@@ -454,7 +454,6 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -476,14 +475,7 @@ class _HomePageState extends State<HomePage> {
           child: Container(
             height: 180,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFDAD7FF),
-                  Color(0xFFECEAFF),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              gradient: AppStyles.headerGradient,
             ),
           ),
         ),
@@ -535,12 +527,10 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 22),
           ClipRRect(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: AppStyles.pillRadius,
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               minHeight: 6,
-              backgroundColor: const Color(0xFFE5E1F5),
-              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
             ),
           ),
           const SizedBox(height: 18),
@@ -571,7 +561,7 @@ class _HomePageState extends State<HomePage> {
                     )
                   : null,
               color: selected ? null : Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppStyles.cardInnerRadius,
             ),
             child: Center(
               child: Text(
@@ -745,7 +735,7 @@ class _HomePageState extends State<HomePage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppStyles.pillRadius,
           onTap: onTap,
           child: Ink(
             height: 64,
@@ -755,14 +745,14 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Icon(
                   icon,
-                  color: Colors.white,
+                  color: AppColors.primaryTextOn,
                   size: 26,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: AppStyles.buttonText.copyWith(
-                    color: Colors.white,
+                    color: AppColors.primaryTextOn,
                   ),
                 ),
               ],
@@ -785,7 +775,7 @@ class _HomePageState extends State<HomePage> {
 
       return Expanded(
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: AppStyles.pillRadius,
           onTap: onTap,
           child: Center(
             child: Opacity(
@@ -864,7 +854,7 @@ class _HomePageState extends State<HomePage> {
                     child: Icon(
                       Icons.timer_outlined,
                       color: _selectedTab == 0
-                          ? Colors.white
+                          ? AppColors.primaryTextOn
                           : AppColors.textMuted,
                     ),
                   ),
@@ -905,7 +895,7 @@ class _HomePageState extends State<HomePage> {
                     child: Icon(
                       Icons.history_rounded,
                       color: _selectedTab == 1
-                          ? Colors.white
+                          ? AppColors.primaryTextOn
                           : AppColors.textMuted,
                     ),
                   ),

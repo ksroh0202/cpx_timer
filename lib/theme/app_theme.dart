@@ -1,18 +1,59 @@
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
+import 'app_styles.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.light,
+      surface: AppColors.surface,
+      onSurface: AppColors.textPrimary,
+    ).copyWith(
+      primary: AppColors.primary,
+      onPrimary: AppColors.primaryTextOn,
+      secondary: AppColors.primaryDark,
+      outline: AppColors.line,
+    );
+
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      colorSchemeSeed: AppColors.primary,
+      colorScheme: colorScheme,
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+        shape: RoundedRectangleBorder(borderRadius: AppStyles.cardInnerRadius),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+      ),
+      dividerTheme: const DividerThemeData(color: AppColors.line, thickness: 1),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.textPrimary,
+        contentTextStyle: const TextStyle(color: AppColors.primaryTextOn),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: AppStyles.cardInnerRadius),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          foregroundColor: AppColors.primaryTextOn,
+          backgroundColor: AppColors.primary,
         ),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary,
+        linearTrackColor: AppColors.progressTrack,
       ),
       textTheme: const TextTheme(
         headlineLarge: TextStyle(

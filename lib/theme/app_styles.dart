@@ -3,6 +3,7 @@ import 'app_colors.dart';
 
 class AppStyles {
   static final cardRadius = BorderRadius.circular(28);
+  static final cardInnerRadius = BorderRadius.circular(24);
   static final pillRadius = BorderRadius.circular(999);
 
   static final cardDecoration = BoxDecoration(
@@ -13,6 +14,13 @@ class AppStyles {
   static final softPillDecoration = BoxDecoration(
     color: AppColors.surfaceSoft,
     borderRadius: pillRadius,
+  );
+
+
+  static const headerGradient = LinearGradient(
+    colors: [AppColors.surfaceTint, AppColors.background],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 
   static final primaryPillDecoration = BoxDecoration(
