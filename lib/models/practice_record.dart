@@ -1,5 +1,4 @@
-
-
+// 한 번의 연습 결과를 저장하기 위한 데이터 묶음입니다.
 class PracticeRecord {
   final String id;
   final DateTime endedAt;
@@ -19,6 +18,7 @@ class PracticeRecord {
     required this.endType,
   });
 
+  // 객체를 저장하기 쉬운 Map 형태로 바꿉니다.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -31,6 +31,7 @@ class PracticeRecord {
     };
   }
 
+  // 저장된 Map 데이터를 다시 PracticeRecord 객체로 복원합니다.
   factory PracticeRecord.fromMap(Map<String, dynamic> map) {
     return PracticeRecord(
       id: map['id'],

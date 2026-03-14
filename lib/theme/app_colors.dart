@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// 앱 전체에서 공통으로 사용할 색상값을 한곳에 모아 둡니다.
 class AppColors {
   static const background = Color(0xFFF6F5FB);
   static const surface = Color(0xFFFFFFFF);

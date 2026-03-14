@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_styles.dart';
 
+// 앱 전체의 공통 테마 규칙을 정의합니다.
 class AppTheme {
   static ThemeData get lightTheme {
+    // Material 위젯들이 공통으로 참고하는 색상 묶음입니다.
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
@@ -17,6 +19,7 @@ class AppTheme {
       outline: AppColors.line,
     );
 
+    // 카드, 버튼, 텍스트 등 기본 모양을 한 번에 설정합니다.
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,

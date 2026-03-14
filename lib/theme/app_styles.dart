@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+// 자주 쓰는 모양과 글자 스타일을 재사용하기 위해 모아 둔 파일입니다.
 class AppStyles {
   static final cardRadius = BorderRadius.circular(28);
   static final cardInnerRadius = BorderRadius.circular(24);
@@ -16,7 +17,7 @@ class AppStyles {
     borderRadius: pillRadius,
   );
 
-
+  // 상단 배경에 은은한 색 변화가 보이도록 하는 그라데이션입니다.
   static const headerGradient = LinearGradient(
     colors: [AppColors.surfaceTint, AppColors.background],
     begin: Alignment.topCenter,
@@ -53,5 +54,4 @@ class AppStyles {
     fontSize: 12,
     fontWeight: FontWeight.w400,
   );
-
 }
