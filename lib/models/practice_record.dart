@@ -1,4 +1,5 @@
 // 한 번의 연습 결과를 저장하기 위한 데이터 묶음입니다.
+// 저장되는 CPX 연습 결과 1건의 구조를 표현한다.
 class PracticeRecord {
   final String id;
   final DateTime endedAt;

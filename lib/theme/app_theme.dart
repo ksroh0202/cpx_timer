@@ -1,3 +1,4 @@
+// Material 테마를 앱 디자인 시스템에 맞게 구성한다.
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';

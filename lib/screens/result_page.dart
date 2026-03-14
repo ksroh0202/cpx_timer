@@ -1,26 +1,19 @@
+// 저장된 연습 결과 1건의 상세 정보를 보여준다.
 import 'package:flutter/material.dart';
 
 import '../models/practice_record.dart';
 import '../utils/formatters.dart';
 import '../widgets/stage_row.dart';
 
-// 한 번 끝난 연습의 상세 결과를 보여 주는 화면입니다.
 class ResultPage extends StatelessWidget {
   final PracticeRecord record;
 
   const ResultPage({super.key, required this.record});
 
-  // 날짜와 시간을 읽기 쉬운 문자열로 바꿉니다.
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    // 위 카드는 전체 결과, 아래 카드는 단계별 시간을 보여 줍니다.
     return Scaffold(
       appBar: AppBar(
         title: const Text('결과 상세'),
@@ -52,7 +45,7 @@ class ResultPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _formatDateTime(record.endedAt),
+                    formatDateTime(record.endedAt),
                     style: textTheme.bodyMedium?.copyWith(fontSize: 15),
                   ),
                 ],

@@ -1,3 +1,4 @@
+// SharedPreferences 기반으로 연습 기록을 저장하고 불러온다.
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/practice_record.dart';

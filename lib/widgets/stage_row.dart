@@ -1,3 +1,4 @@
+// 단계명과 시간을 한 줄로 보여주는 공통 행 위젯이다.
 import 'package:flutter/material.dart';
 
 // "항목 이름 - 값" 한 줄을 재사용하기 위한 작은 위젯입니다.

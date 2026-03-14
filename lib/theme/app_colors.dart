@@ -1,3 +1,4 @@
+// 앱 전반에서 재사용하는 색상 팔레트를 정의한다.
 import 'package:flutter/material.dart';
 
 // 앱 전체에서 공통으로 사용할 색상값을 한곳에 모아 둡니다.

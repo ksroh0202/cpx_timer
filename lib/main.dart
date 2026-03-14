@@ -1,3 +1,4 @@
+// 앱의 진입점과 전역 테마 구성을 담당한다.
 import 'package:flutter/material.dart';
 import 'screens/home_page.dart';
 import 'theme/app_theme.dart';

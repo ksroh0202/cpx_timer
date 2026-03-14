@@ -1,3 +1,4 @@
+// 공통 카드, 버튼, 텍스트 스타일과 장식 값을 모아둔다.
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
