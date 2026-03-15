@@ -1,12 +1,6 @@
-// 단계명과 시간을 한 줄로 보여주는 공통 행 위젯이다.
 import 'package:flutter/material.dart';
 
-// "항목 이름 - 값" 한 줄을 재사용하기 위한 작은 위젯입니다.
 class StageRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isBold;
-
   const StageRow({
     super.key,
     required this.label,
@@ -14,20 +8,25 @@ class StageRow extends StatelessWidget {
     this.isBold = false,
   });
 
+  final String label;
+  final String value;
+  final bool isBold;
+
   @override
   Widget build(BuildContext context) {
-    final baseStyle = Theme.of(context).textTheme.bodyLarge;
-    // 합계처럼 강조가 필요한 줄은 더 굵게 보이도록 합니다.
-    final style = baseStyle?.copyWith(
-      fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-    );
+    final labelStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+        );
+    final valueStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+        );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: style)),
-          Text(value, style: style),
+          Expanded(child: Text(label, style: labelStyle)),
+          Text(value, style: valueStyle),
         ],
       ),
     );

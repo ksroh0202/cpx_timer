@@ -1,58 +1,121 @@
-// 공통 카드, 버튼, 텍스트 스타일과 장식 값을 모아둔다.
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
 
-// 자주 쓰는 모양과 글자 스타일을 재사용하기 위해 모아 둔 파일입니다.
 class AppStyles {
   static final cardRadius = BorderRadius.circular(28);
-  static final cardInnerRadius = BorderRadius.circular(24);
+  static final panelRadius = BorderRadius.circular(28);
+  static final segmentRadius = BorderRadius.circular(24);
+  static final fieldRadius = BorderRadius.circular(22);
   static final pillRadius = BorderRadius.circular(999);
+  static final floatingBarRadius = BorderRadius.circular(30);
 
-  static final cardDecoration = BoxDecoration(
-    color: AppColors.surface,
-    borderRadius: cardRadius,
+  static const surfaceGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      AppColors.backgroundTop,
+      AppColors.backgroundBottom,
+    ],
   );
 
-  static final softPillDecoration = BoxDecoration(
-    color: AppColors.surfaceSoft,
-    borderRadius: pillRadius,
-  );
+  static LinearGradient get glassGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.glassHighlight,
+          AppColors.glassPanel,
+        ],
+      );
 
-  // 상단 배경에 은은한 색 변화가 보이도록 하는 그라데이션입니다.
-  static const headerGradient = LinearGradient(
-    colors: [AppColors.surfaceTint, AppColors.background],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
+  static LinearGradient get glassGradientStrong => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.glassHighlight,
+          AppColors.glassPanelStrong,
+        ],
+      );
 
-  static final primaryPillDecoration = BoxDecoration(
-    gradient: const LinearGradient(
-      colors: [AppColors.primary, AppColors.primaryDark],
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-    ),
-    borderRadius: pillRadius,
+  static BoxDecoration glassDecoration({
+    BorderRadius? borderRadius,
+    bool strong = false,
+    bool selected = false,
+  }) {
+    return BoxDecoration(
+      gradient: selected
+          ? glassGradientStrong
+          : strong
+              ? glassGradientStrong
+              : glassGradient,
+      borderRadius: borderRadius ?? panelRadius,
+      border: Border.all(
+        color: selected ? AppColors.glassStrokeStrong : AppColors.glassStroke,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: strong ? AppColors.shadowSoft : AppColors.shadowFaint,
+          blurRadius: strong ? 28 : 18,
+          offset: const Offset(0, 10),
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration innerGlassDecoration({
+    BorderRadius? borderRadius,
+  }) {
+    return BoxDecoration(
+      color: AppColors.glassPanelSoft,
+      borderRadius: borderRadius ?? fieldRadius,
+      border: Border.all(color: AppColors.glassStroke),
+    );
+  }
+
+  static final inputBorder = OutlineInputBorder(
+    borderRadius: fieldRadius,
+    borderSide: BorderSide.none,
   );
 
   static const timerText = TextStyle(
-    fontSize: 50,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -1,
+    fontSize: 68,
+    fontWeight: FontWeight.w600,
+    height: 0.92,
+    letterSpacing: -3.2,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
   );
 
   static const buttonText = TextStyle(
     fontSize: 18,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.2,
+  );
+
+  static const statusText = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+    color: AppColors.textSecondary,
   );
 
   static const labelText = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    color: AppColors.textMuted,
+  );
+
+  static const captionText = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+    color: AppColors.textMuted,
   );
 
   static const smallText = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
   );
 }

@@ -1,4 +1,3 @@
-// 시험 단계 정의와 단계별 표시 문자열을 제공한다.
 enum ExamStage {
   historyTaking,
   physicalExam,

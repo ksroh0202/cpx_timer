@@ -6,9 +6,10 @@ import '../core/enums/exam_stage.dart';
 import '../core/enums/timer_phase.dart';
 import '../models/practice_record.dart';
 import '../models/timer_session_state.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_styles.dart';
+import '../theme/app_spacing.dart';
+import '../widgets/glass_widgets.dart';
 import '../widgets/home/control_panel.dart';
+import '../widgets/home/stage_selector.dart';
 import '../widgets/home/stage_summary_card.dart';
 import '../widgets/home/timer_display_card.dart';
 import 'records_page.dart';
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('시험 종료'),
-          content: const Text('시험을 조기 종료할까요? 현재까지의 시간은 저장됩니다.'),
+          content: const Text('시험을 조기에 종료할까요? 현재까지의 사용 시간이 저장됩니다.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -318,42 +319,65 @@ class _HomePageState extends State<HomePage> {
         final state = _controller.state;
 
         return Scaffold(
-          body: SafeArea(
-            bottom: false,
-            child: _selectedTab == 0
-                ? _TimerTab(
-                    state: state,
-                    controller: _controller,
-                    examNameController: _examNameController,
-                    selectedSubject: _selectedSubject,
-                    selectedTopic: _selectedTopic,
-                    hasSelectedSubject: _hasSelectedSubject,
-                    hasSelectedTopic: _hasSelectedTopic,
-                    onSubjectTap: _pickSubject,
-                    onTopicTap: _pickTopic,
-                    onReset: _confirmReset,
-                    onStop: _confirmEndEarly,
-                    primaryAction: _primaryButtonAction(state),
-                    primaryIcon: _primaryButtonIcon(state),
-                    primaryLabel: _primaryButtonLabel(state),
-                    onStageSelected: _switchStageByIndex,
-                  )
-                : RecordsPage(
-                    records: state.records,
-                    onOpenRecord: _openResultPage,
-                    onDeleteRecord: _confirmDeleteRecord,
-                    onClearAll: _confirmClearAllRecords,
-                  ),
+          extendBody: true,
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              const Positioned.fill(child: _GlassBackground()),
+              SafeArea(
+                bottom: false,
+                child: _selectedTab == 0
+                    ? _TimerTab(
+                        state: state,
+                        controller: _controller,
+                        examNameController: _examNameController,
+                        selectedSubject: _selectedSubject,
+                        selectedTopic: _selectedTopic,
+                        hasSelectedSubject: _hasSelectedSubject,
+                        hasSelectedTopic: _hasSelectedTopic,
+                        onSubjectTap: _pickSubject,
+                        onTopicTap: _pickTopic,
+                        onReset: _confirmReset,
+                        onStop: _confirmEndEarly,
+                        primaryAction: _primaryButtonAction(state),
+                        primaryIcon: _primaryButtonIcon(state),
+                        primaryLabel: _primaryButtonLabel(state),
+                        onStageSelected: _switchStageByIndex,
+                      )
+                    : RecordsPage(
+                        records: state.records,
+                        onOpenRecord: _openResultPage,
+                        onDeleteRecord: _confirmDeleteRecord,
+                        onClearAll: _confirmClearAllRecords,
+                      ),
+              ),
+            ],
           ),
           bottomNavigationBar: SafeArea(
             top: false,
-            child: _BottomNav(
-              selectedTab: _selectedTab,
-              onTabChanged: (index) {
-                setState(() {
-                  _selectedTab = index;
-                });
-              },
+            child: FractionallySizedBox(
+              widthFactor: 0.8,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                child: GlassBottomBar(
+                items: const [
+                  GlassBottomBarItem(
+                    icon: Icons.timer_outlined,
+                    label: '타이머',
+                  ),
+                  GlassBottomBarItem(
+                    icon: Icons.history_rounded,
+                    label: '기록',
+                  ),
+                ],
+                selectedIndex: _selectedTab,
+                onChanged: (index) {
+                  setState(() {
+                    _selectedTab = index;
+                  });
+                },
+                ),
+              ),
             ),
           ),
         );
@@ -399,87 +423,94 @@ class _TimerTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.page,
+        AppSpacing.page,
+        AppSpacing.pageBottom,
+      ),
       children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 180,
-            decoration: const BoxDecoration(
-              gradient: AppStyles.headerGradient,
-            ),
-          ),
+        TimerDisplayCard(
+          state: state,
+          examNameController: examNameController,
+          selectedSubject: selectedSubject,
+          selectedTopic: selectedTopic,
+          hasSelectedSubject: hasSelectedSubject,
+          hasSelectedTopic: hasSelectedTopic,
+          onSubjectTap: onSubjectTap,
+          onTopicTap: onTopicTap,
         ),
-        ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-          children: [
-            TimerDisplayCard(
-              state: state,
-              examNameController: examNameController,
-              selectedSubject: selectedSubject,
-              selectedTopic: selectedTopic,
-              hasSelectedSubject: hasSelectedSubject,
-              hasSelectedTopic: hasSelectedTopic,
-              onSubjectTap: onSubjectTap,
-              onTopicTap: onTopicTap,
-              onStageSelected: onStageSelected,
-            ),
-            const SizedBox(height: 12),
-            ControlPanel(
-              primaryAction: primaryAction,
-              primaryIcon: primaryIcon,
-              primaryLabel: primaryLabel,
-              onReset: onReset,
-              onStop: onStop,
-              canReset:
-                  state.isRunning ||
-                  state.isPaused ||
-                  state.phase == TimerPhase.finished,
-              canStop: state.isExamActive,
-            ),
-            const SizedBox(height: 12),
-            StageSummaryCard(
-              state: state,
-              previewStageSeconds: controller.previewStageSeconds,
-            ),
-          ],
+        const SizedBox(height: AppSpacing.section),
+        StageSelector(
+          currentStage: state.currentStage,
+          enabled: state.isExamActive,
+          onStageSelected: onStageSelected,
+        ),
+        const SizedBox(height: AppSpacing.section),
+        ControlPanel(
+          primaryAction: primaryAction,
+          primaryIcon: primaryIcon,
+          primaryLabel: primaryLabel,
+          onReset: onReset,
+          onStop: onStop,
+          canReset:
+              state.isRunning ||
+              state.isPaused ||
+              state.phase == TimerPhase.finished,
+          canStop: state.isExamActive,
+        ),
+        const SizedBox(height: AppSpacing.section),
+        StageSummaryCard(
+          state: state,
+          previewStageSeconds: controller.previewStageSeconds,
         ),
       ],
     );
   }
 }
 
-class _BottomNav extends StatelessWidget {
-  const _BottomNav({
-    required this.selectedTab,
-    required this.onTabChanged,
-  });
-
-  final int selectedTab;
-  final ValueChanged<int> onTabChanged;
+class _GlassBackground extends StatelessWidget {
+  const _GlassBackground();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      decoration: AppStyles.cardDecoration,
-      child: Row(
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFF5F6F8),
+            Color(0xFFE6E8EC),
+          ],
+        ),
+      ),
+      child: Stack(
         children: [
-          _BottomNavItem(
-            icon: Icons.timer_outlined,
-            label: '타이머',
-            selected: selectedTab == 0,
-            onTap: () => onTabChanged(0),
+          Positioned(
+            top: -60,
+            right: -30,
+            child: _GlassGlow(
+              size: 220,
+              color: Colors.white.withValues(alpha: 0.34),
+            ),
           ),
-          _BottomNavItem(
-            icon: Icons.history_rounded,
-            label: '기록',
-            selected: selectedTab == 1,
-            onTap: () => onTabChanged(1),
+          Positioned(
+            left: -80,
+            top: 220,
+            child: _GlassGlow(
+              size: 180,
+              color: Colors.white.withValues(alpha: 0.20),
+            ),
+          ),
+          Positioned(
+            right: 10,
+            bottom: 140,
+            child: _GlassGlow(
+              size: 160,
+              color: Colors.white.withValues(alpha: 0.18),
+            ),
           ),
         ],
       ),
@@ -487,52 +518,29 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class _BottomNavItem extends StatelessWidget {
-  const _BottomNavItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
+class _GlassGlow extends StatelessWidget {
+  const _GlassGlow({
+    required this.size,
+    required this.color,
   });
 
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  final double size;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: selected
-                    ? AppColors.primaryTextOn
-                    : AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: selected ? AppColors.primary : AppColors.textPrimary,
-                  ),
-            ),
-          ],
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color,
+              color.withValues(alpha: 0),
+            ],
+          ),
         ),
       ),
     );

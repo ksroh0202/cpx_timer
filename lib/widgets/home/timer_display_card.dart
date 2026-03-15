@@ -4,10 +4,9 @@ import '../../core/constants/exam_options.dart';
 import '../../core/constants/timer_constants.dart';
 import '../../core/enums/timer_phase.dart';
 import '../../models/timer_session_state.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_styles.dart';
+import '../../theme/app_spacing.dart';
 import '../../utils/formatters.dart';
-import 'stage_selector.dart';
+import '../glass_widgets.dart';
 
 class TimerDisplayCard extends StatelessWidget {
   const TimerDisplayCard({
@@ -20,7 +19,6 @@ class TimerDisplayCard extends StatelessWidget {
     required this.hasSelectedTopic,
     required this.onSubjectTap,
     required this.onTopicTap,
-    required this.onStageSelected,
   });
 
   final TimerSessionState state;
@@ -31,11 +29,6 @@ class TimerDisplayCard extends StatelessWidget {
   final bool hasSelectedTopic;
   final VoidCallback onSubjectTap;
   final VoidCallback onTopicTap;
-  final ValueChanged<int> onStageSelected;
-
-  bool get _showStageSelector {
-    return state.phase == TimerPhase.exam || state.phase == TimerPhase.pausedExam;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,125 +46,149 @@ class TimerDisplayCard extends StatelessWidget {
                     : state.examRemaining,
               );
 
-    return Container(
-      decoration: AppStyles.cardDecoration,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+    return GlassContainer(
+      height: 340,
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextField(
-            controller: examNameController,
-            textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              hintText: defaultExamName,
-              isDense: true,
-              filled: true,
-              fillColor: AppColors.surfaceSoft,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _GlassTextField(
+                controller: examNameController,
+                hintText: defaultExamName,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide.none,
+              const SizedBox(height: AppSpacing.component),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassMetaPicker(
+                      value: hasSelectedSubject ? selectedSubject : '과목 선택',
+                      onTap: onSubjectTap,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.component),
+                  Expanded(
+                    child: _GlassMetaPicker(
+                      value: hasSelectedTopic ? selectedTopic : '주제 선택',
+                      onTap: onTopicTap,
+                    ),
+                  ),
+                ],
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(color: AppColors.primary),
-              ),
-            ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: AppStyles.softPillDecoration,
-            child: Row(
-              children: [
-                _PickerButton(
-                  label: hasSelectedSubject ? selectedSubject : '시험 과목',
-                  onTap: onSubjectTap,
+          Column(
+            children: [
+              Text(
+                mainTimeText,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontSize: 64,
+                      height: 0.92,
+                      letterSpacing: -3,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.component + 4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress.clamp(0.0, 1.0),
+                  minHeight: 8,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.black87),
+                  backgroundColor: Colors.white.withValues(alpha: 0.22),
                 ),
-                const SizedBox(width: 6),
-                _PickerButton(
-                  label: hasSelectedTopic ? selectedTopic : '시험 주제',
-                  onTap: onTopicTap,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
-          Center(
-            child: Text(
-              mainTimeText,
-              style: AppStyles.timerText,
-            ),
-          ),
-          const SizedBox(height: 22),
-          ClipRRect(
-            borderRadius: AppStyles.pillRadius,
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              minHeight: 6,
-            ),
-          ),
-          if (_showStageSelector) ...[
-            const SizedBox(height: 18),
-            StageSelector(
-              currentStage: state.currentStage,
-              enabled: state.isExamActive,
-              onStageSelected: onStageSelected,
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _PickerButton extends StatelessWidget {
-  const _PickerButton({
-    required this.label,
+class _GlassTextField extends StatelessWidget {
+  const _GlassTextField({
+    required this.controller,
+    required this.hintText,
+  });
+
+  final TextEditingController controller;
+  final String hintText;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      borderRadius: 22,
+      minHeight: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      child: TextField(
+        controller: controller,
+        textInputAction: TextInputAction.done,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+        decoration: InputDecoration(
+          hintText: hintText,
+          labelText: '연습 이름',
+          labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.black54,
+                fontWeight: FontWeight.w600,
+              ),
+          floatingLabelBehavior: FloatingLabelBehavior.never,
+          filled: false,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassMetaPicker extends StatelessWidget {
+  const _GlassMetaPicker({
+    required this.value,
     required this.onTap,
   });
 
-  final String label;
+  final String value;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: AppStyles.cardInnerRadius,
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppStyles.cardInnerRadius,
-          ),
+        child: GlassContainer(
+          borderRadius: 22,
+          minHeight: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
+              Expanded(
                 child: Text(
-                  label,
+                  value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.black87,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
                       ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               const Icon(
                 Icons.expand_more_rounded,
-                size: 18,
-                color: AppColors.iconSoft,
+                size: 20,
+                color: Colors.black54,
               ),
             ],
           ),

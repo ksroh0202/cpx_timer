@@ -5,9 +5,9 @@ import '../utils/formatters.dart';
 import '../widgets/stage_row.dart';
 
 class ResultPage extends StatelessWidget {
-  final PracticeRecord record;
-
   const ResultPage({super.key, required this.record});
+
+  final PracticeRecord record;
 
   @override
   Widget build(BuildContext context) {

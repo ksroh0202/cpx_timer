@@ -68,8 +68,9 @@ class RecordsPage extends StatelessWidget {
                           record.examName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 6),
