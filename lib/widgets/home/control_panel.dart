@@ -25,40 +25,37 @@ class ControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      height: 96,
-      padding: const EdgeInsets.all(16),
+      height: 88,
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
           Expanded(
             flex: 2,
             child: GlassButton(
-              label: primaryLabel,
               icon: primaryIcon,
               onPressed: primaryAction,
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              height: 56,
+              padding: const EdgeInsets.all(10),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             flex: 1,
             child: GlassButton(
-              label: '초기화',
               icon: Icons.refresh_rounded,
               onPressed: canReset ? onReset : null,
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              height: 56,
+              padding: const EdgeInsets.all(10),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             flex: 1,
             child: GlassButton(
-              label: '종료',
               icon: Icons.stop_rounded,
               onPressed: canStop ? onStop : null,
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              height: 56,
+              padding: const EdgeInsets.all(10),
             ),
           ),
         ],

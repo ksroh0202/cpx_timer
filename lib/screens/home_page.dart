@@ -6,10 +6,9 @@ import '../core/enums/exam_stage.dart';
 import '../core/enums/timer_phase.dart';
 import '../models/practice_record.dart';
 import '../models/timer_session_state.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/glass_widgets.dart';
-import '../widgets/home/control_panel.dart';
-import '../widgets/home/stage_selector.dart';
 import '../widgets/home/stage_summary_card.dart';
 import '../widgets/home/timer_display_card.dart';
 import 'records_page.dart';
@@ -320,7 +319,7 @@ class _HomePageState extends State<HomePage> {
 
         return Scaffold(
           extendBody: true,
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.background,
           body: Stack(
             children: [
               const Positioned.fill(child: _GlassBackground()),
@@ -440,18 +439,9 @@ class _TimerTab extends StatelessWidget {
           hasSelectedTopic: hasSelectedTopic,
           onSubjectTap: onSubjectTap,
           onTopicTap: onTopicTap,
-        ),
-        const SizedBox(height: AppSpacing.section),
-        StageSelector(
-          currentStage: state.currentStage,
-          enabled: state.isExamActive,
           onStageSelected: onStageSelected,
-        ),
-        const SizedBox(height: AppSpacing.section),
-        ControlPanel(
           primaryAction: primaryAction,
           primaryIcon: primaryIcon,
-          primaryLabel: primaryLabel,
           onReset: onReset,
           onStop: onStop,
           canReset:
@@ -481,8 +471,8 @@ class _GlassBackground extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFF5F6F8),
-            Color(0xFFE6E8EC),
+            AppColors.backgroundTop,
+            AppColors.backgroundBottom,
           ],
         ),
       ),
@@ -493,7 +483,7 @@ class _GlassBackground extends StatelessWidget {
             right: -30,
             child: _GlassGlow(
               size: 220,
-              color: Colors.white.withValues(alpha: 0.34),
+              color: AppColors.glassSurface.withValues(alpha: 0.30),
             ),
           ),
           Positioned(
@@ -501,7 +491,7 @@ class _GlassBackground extends StatelessWidget {
             top: 220,
             child: _GlassGlow(
               size: 180,
-              color: Colors.white.withValues(alpha: 0.20),
+              color: AppColors.shadowLight,
             ),
           ),
           Positioned(
@@ -509,7 +499,7 @@ class _GlassBackground extends StatelessWidget {
             bottom: 140,
             child: _GlassGlow(
               size: 160,
-              color: Colors.white.withValues(alpha: 0.18),
+              color: AppColors.glassSurfaceSecondary.withValues(alpha: 0.18),
             ),
           ),
         ],

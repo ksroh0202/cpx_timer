@@ -1,35 +1,13 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/app_styles.dart';
 
 const double _glassBlur = 30;
-const double _glassBorder = 1;
-const double _glassRadius = 28;
-const double _glassOpacityHigh = 0.25;
-const double _glassOpacityLow = 0.05;
-const double _glassBorderOpacity = 0.4;
+const double _glassRadius = 20;
 const double _glassMinHeight = 64;
-
-LinearGradient _glassFillGradient() {
-  return LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Colors.white.withValues(alpha: _glassOpacityHigh),
-      Colors.white.withValues(alpha: _glassOpacityLow),
-    ],
-  );
-}
-
-LinearGradient _glassBorderGradient() {
-  return LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Colors.white.withValues(alpha: _glassBorderOpacity),
-      Colors.white.withValues(alpha: _glassBorderOpacity),
-    ],
-  );
-}
 
 class GlassContainer extends StatelessWidget {
   const GlassContainer({
@@ -41,9 +19,9 @@ class GlassContainer extends StatelessWidget {
     this.margin,
     this.alignment = Alignment.center,
     this.blur = _glassBlur,
-    this.border = _glassBorder,
     this.borderRadius = _glassRadius,
     this.minHeight = _glassMinHeight,
+    this.surfaceColor = AppColors.glassSurface,
   });
 
   final Widget child;
@@ -53,9 +31,9 @@ class GlassContainer extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final Alignment alignment;
   final double blur;
-  final double border;
   final double borderRadius;
   final double minHeight;
+  final Color surfaceColor;
 
   @override
   Widget build(BuildContext context) {
@@ -64,20 +42,29 @@ class GlassContainer extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final resolvedWidth = width ?? _resolveWidth(constraints);
-          final resolvedHeight = height ?? _resolveHeight(constraints, minHeight);
+          final resolvedHeight = _resolveHeight(constraints);
+          final radius = BorderRadius.circular(borderRadius);
 
-          return GlassmorphicContainer(
+          return Container(
             width: resolvedWidth,
             height: resolvedHeight,
-            borderRadius: borderRadius,
-            blur: blur,
-            alignment: alignment,
-            border: border,
-            linearGradient: _glassFillGradient(),
-            borderGradient: _glassBorderGradient(),
-            child: Padding(
-              padding: padding,
-              child: child,
+            constraints: BoxConstraints(minHeight: minHeight),
+            decoration: AppStyles.glassPanelDecoration(
+              borderRadius: radius,
+              color: surfaceColor,
+            ),
+            child: ClipRRect(
+              borderRadius: radius,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: Align(
+                  alignment: alignment,
+                  child: Padding(
+                    padding: padding,
+                    child: child,
+                  ),
+                ),
+              ),
             ),
           );
         },
@@ -92,19 +79,22 @@ class GlassContainer extends StatelessWidget {
     return double.infinity;
   }
 
-  double _resolveHeight(BoxConstraints constraints, double fallback) {
+  double? _resolveHeight(BoxConstraints constraints) {
+    if (height != null) {
+      return height;
+    }
     if (constraints.hasBoundedHeight && constraints.maxHeight.isFinite) {
       return constraints.maxHeight;
     }
-    return fallback;
+    return null;
   }
 }
 
 class GlassButton extends StatelessWidget {
   const GlassButton({
     super.key,
-    required this.label,
     required this.onPressed,
+    this.label = '',
     this.icon,
     this.height = 64,
     this.width,
@@ -121,24 +111,26 @@ class GlassButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disabled = onPressed == null;
+    final hasLabel = label.isNotEmpty;
     final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.black87,
+          color: AppColors.primaryText,
           fontWeight: FontWeight.w600,
         );
 
     return Opacity(
       opacity: disabled ? 0.5 : 1,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(16),
           onTap: onPressed,
           child: SizedBox(
             width: width,
             child: GlassContainer(
               height: height,
-              borderRadius: 999,
+              borderRadius: 16,
               padding: padding,
+              surfaceColor: AppColors.glassSurfaceSecondary,
               child: Center(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -147,16 +139,17 @@ class GlassButton extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (icon != null) ...[
-                        Icon(icon, size: 20, color: Colors.black87),
-                        const SizedBox(width: 6),
+                        Icon(icon, size: 20, color: AppColors.primaryText),
+                        if (hasLabel) const SizedBox(width: 6),
                       ],
-                      Text(
-                        label,
-                        maxLines: 1,
-                        softWrap: false,
-                        textAlign: TextAlign.center,
-                        style: textStyle,
-                      ),
+                      if (hasLabel)
+                        Text(
+                          label,
+                          maxLines: 1,
+                          softWrap: false,
+                          textAlign: TextAlign.center,
+                          style: textStyle,
+                        ),
                     ],
                   ),
                 ),
@@ -219,31 +212,27 @@ class _SegmentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = selected
-        ? Colors.white.withValues(alpha: 0.22)
-        : Colors.transparent;
+    final background =
+        selected ? AppColors.glassSurface : AppColors.glassSurfaceSecondary;
 
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          decoration: BoxDecoration(
+          decoration: AppStyles.glassPanelDecoration(
+            borderRadius: BorderRadius.circular(14),
             color: background,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: selected ? 0.30 : 0.12),
-            ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 14),
           child: Center(
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.black87,
+                    color: AppColors.primaryText,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   ),
             ),
@@ -282,9 +271,10 @@ class GlassBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       height: height,
-      borderRadius: 24,
+      borderRadius: 16,
       blur: 32,
       padding: const EdgeInsets.all(6),
+      surfaceColor: AppColors.glassSurfaceSecondary,
       child: Row(
         children: [
           for (var i = 0; i < items.length; i++) ...[
@@ -317,21 +307,18 @@ class _BottomBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          decoration: BoxDecoration(
+          decoration: AppStyles.glassPanelDecoration(
+            borderRadius: BorderRadius.circular(12),
             color: selected
-                ? Colors.white.withValues(alpha: 0.22)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: selected ? 0.28 : 0.10),
-            ),
+                ? AppColors.glassSurface
+                : AppColors.glassSurfaceSecondary,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(
@@ -340,13 +327,13 @@ class _BottomBarItem extends StatelessWidget {
               Icon(
                 item.icon,
                 size: 18,
-                color: Colors.black87,
+                color: AppColors.primaryText,
               ),
               const SizedBox(width: 6),
               Text(
                 item.label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.black87,
+                      color: AppColors.primaryText,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),

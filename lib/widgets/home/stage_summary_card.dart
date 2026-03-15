@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/enums/exam_stage.dart';
 import '../../models/timer_session_state.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
 import '../glass_widgets.dart';
 import '../stage_row.dart';
@@ -19,7 +20,7 @@ class StageSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
-      height: 196,
+      height: 200,
       padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -28,17 +29,17 @@ class StageSummaryCard extends StatelessWidget {
             label: ExamStage.historyTaking.label,
             value: formatSeconds(previewStageSeconds(ExamStage.historyTaking)),
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.26)),
+          Divider(height: 1, color: AppColors.borderLight),
           StageRow(
             label: ExamStage.physicalExam.label,
             value: formatSeconds(previewStageSeconds(ExamStage.physicalExam)),
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.26)),
+          Divider(height: 1, color: AppColors.borderLight),
           StageRow(
             label: ExamStage.patientEducation.label,
             value: formatSeconds(previewStageSeconds(ExamStage.patientEducation)),
           ),
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.26)),
+          Divider(height: 1, color: AppColors.borderLight),
           StageRow(
             label: '총 사용 시간',
             value: formatSeconds(state.examElapsed),

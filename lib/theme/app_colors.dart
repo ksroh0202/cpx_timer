@@ -1,36 +1,38 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const backgroundTop = Color(0xFFF5F6F8);
-  static const backgroundBottom = Color(0xFFE6E8EC);
-  static const background = backgroundTop;
+  static const transparent = Colors.transparent;
 
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceSoft = Color(0xFFF7F8FA);
+  static const background = Color(0xFFCFD2D9);
 
-  static const glassPanel = Color(0x4DFFFFFF);
-  static const glassPanelStrong = Color(0x59FFFFFF);
-  static const glassPanelSoft = Color(0x40FFFFFF);
-  static const glassSelected = Color(0x73FFFFFF);
-  static const glassStroke = Color(0x40FFFFFF);
-  static const glassStrokeStrong = Color(0x59FFFFFF);
-  static const glassHighlight = Color(0x73FFFFFF);
+  static const glassSurface = Color(0xFFF1F0EC);
 
-  static const accent = Color(0xFF141922);
-  static const accentSoft = Color(0xFF697180);
-  static const accentMuted = Color(0xFF9199A6);
-  static const primaryTextOn = Color(0xFFFFFFFF);
+  static const glassSurfaceSecondary = Color(0xFFE8E9ED);
 
-  static const textPrimary = Color(0xFF151922);
-  static const textSecondary = Color(0xFF4F5663);
-  static const textMuted = Color(0xFF7B8493);
+  static const primaryText = Color(0xFF222222);
 
-  static const divider = Color(0x1FFFFFFF);
-  static const dividerDark = Color(0x120F172A);
-  static const progressTrack = Color(0x24FFFFFF);
-  static const progressValue = Color(0xD8141922);
-  static const iconSoft = Color(0xFF606978);
+  static const secondaryText = Color(0xFF666666);
 
-  static const shadowSoft = Color(0x160F172A);
-  static const shadowFaint = Color(0x0C0F172A);
+  static final borderLight = Colors.white.withValues(alpha: 0.10);
+
+  static final shadowDark = Colors.black.withValues(alpha: 0.06);
+
+  static final shadowLight = Colors.white.withValues(alpha: 0.14);
+
+  static const backgroundTop = background;
+  static const backgroundBottom = Color(0xFFD7DADF);
+  static const surface = glassSurface;
+  static const surfaceSoft = glassSurfaceSecondary;
+  static const accent = primaryText;
+  static const accentSoft = secondaryText;
+  static const accentMuted = secondaryText;
+  static const primaryTextOn = glassSurface;
+  static const textPrimary = primaryText;
+  static const textSecondary = secondaryText;
+  static const textMuted = secondaryText;
+  static const divider = Color(0x10FFFFFF);
+  static const dividerDark = Color(0x12222222);
+  static const progressTrack = Color(0x14FFFFFF);
+  static const progressValue = primaryText;
+  static const iconSoft = secondaryText;
 }

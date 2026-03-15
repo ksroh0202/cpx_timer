@@ -31,7 +31,10 @@ class RecordsPage extends StatelessWidget {
               children: [
                 TextButton.icon(
                   onPressed: onClearAll,
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.secondaryText,
+                  ),
                   label: const Text('전체 삭제'),
                 ),
               ],
@@ -54,8 +57,13 @@ class RecordsPage extends StatelessWidget {
                     final record = records[index];
                     return Card(
                       elevation: 0,
+                      color: AppColors.glassSurface,
+                      margin: EdgeInsets.zero,
+                      surfaceTintColor: AppColors.transparent,
+                      shadowColor: AppColors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: AppStyles.cardRadius,
+                        side: BorderSide(color: AppColors.borderLight, width: 1),
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.fromLTRB(
@@ -97,7 +105,10 @@ class RecordsPage extends StatelessWidget {
                           ),
                         ),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.secondaryText,
+                          ),
                           tooltip: '기록 삭제',
                           onPressed: () => onDeleteRecord(record),
                         ),

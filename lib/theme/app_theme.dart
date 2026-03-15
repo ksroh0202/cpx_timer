@@ -15,6 +15,7 @@ class AppTheme {
       onPrimary: AppColors.primaryTextOn,
       secondary: AppColors.accentSoft,
       outline: AppColors.dividerDark,
+      surfaceContainerHighest: AppColors.glassSurfaceSecondary,
     );
 
     return ThemeData(
@@ -23,39 +24,47 @@ class AppTheme {
       colorScheme: colorScheme,
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.glassPanel,
-        shape: RoundedRectangleBorder(borderRadius: AppStyles.panelRadius),
+        color: AppColors.glassSurface,
+        margin: EdgeInsets.zero,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppStyles.panelRadius,
+          side: BorderSide(color: AppColors.borderLight, width: 1),
+        ),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.glassSurface,
+        surfaceTintColor: AppColors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppStyles.panelRadius),
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.dividerDark,
         thickness: 1,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.textPrimary,
-        contentTextStyle: const TextStyle(color: AppColors.primaryTextOn),
+        backgroundColor: AppColors.primaryText,
+        contentTextStyle: const TextStyle(color: AppColors.glassSurface),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface.withValues(alpha: 0.96),
+        backgroundColor: AppColors.glassSurface.withValues(alpha: 0.94),
         shape: RoundedRectangleBorder(borderRadius: AppStyles.panelRadius),
+        surfaceTintColor: AppColors.transparent,
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary),
+        style: TextButton.styleFrom(foregroundColor: AppColors.secondaryText),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          foregroundColor: AppColors.primaryTextOn,
-          backgroundColor: AppColors.accent,
+          foregroundColor: AppColors.primaryText,
+          backgroundColor: AppColors.glassSurfaceSecondary,
+          surfaceTintColor: AppColors.transparent,
         ),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
@@ -64,8 +73,8 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.glassPanelSoft,
-        hintStyle: const TextStyle(color: AppColors.textMuted),
+        fillColor: AppColors.glassSurfaceSecondary,
+        hintStyle: const TextStyle(color: AppColors.secondaryText),
         border: AppStyles.inputBorder,
         enabledBorder: AppStyles.inputBorder,
         focusedBorder: AppStyles.inputBorder,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/practice_record.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_styles.dart';
 import '../utils/formatters.dart';
 import '../widgets/stage_row.dart';
 
@@ -19,6 +21,15 @@ class ResultPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           Card(
+            elevation: 0,
+            color: AppColors.glassSurface,
+            margin: EdgeInsets.zero,
+            surfaceTintColor: AppColors.transparent,
+            shadowColor: AppColors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppStyles.cardRadius,
+              side: BorderSide(color: AppColors.borderLight, width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -62,6 +73,15 @@ class ResultPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
+            elevation: 0,
+            color: AppColors.glassSurface,
+            margin: EdgeInsets.zero,
+            surfaceTintColor: AppColors.transparent,
+            shadowColor: AppColors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: AppStyles.cardRadius,
+              side: BorderSide(color: AppColors.borderLight, width: 1),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -70,17 +90,17 @@ class ResultPage extends StatelessWidget {
                     label: '병력 청취',
                     value: formatSeconds(record.historySeconds),
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: AppColors.borderLight),
                   StageRow(
                     label: '신체 진찰',
                     value: formatSeconds(record.physicalSeconds),
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: AppColors.borderLight),
                   StageRow(
                     label: '환자 교육',
                     value: formatSeconds(record.educationSeconds),
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: AppColors.borderLight),
                   StageRow(
                     label: '총 사용 시간',
                     value: formatSeconds(record.totalSeconds),
