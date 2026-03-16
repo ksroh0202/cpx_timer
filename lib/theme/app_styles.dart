@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_radii.dart';
+import 'app_shadows.dart';
 
 class AppStyles {
-  static final cardRadius = BorderRadius.circular(20);
-  static final panelRadius = BorderRadius.circular(20);
-  static final segmentRadius = BorderRadius.circular(14);
-  static final fieldRadius = BorderRadius.circular(14);
-  static final pillRadius = BorderRadius.circular(16);
-  static final floatingBarRadius = BorderRadius.circular(16);
+  static final cardRadius = BorderRadius.circular(AppRadii.card);
+  static final panelRadius = BorderRadius.circular(AppRadii.panel);
+  static final segmentRadius = BorderRadius.circular(AppRadii.pill);
+  static final fieldRadius = BorderRadius.circular(AppRadii.field);
+  static final pillRadius = BorderRadius.circular(AppRadii.pill);
+  static final floatingBarRadius = BorderRadius.circular(24);
 
   static const surfaceGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -27,18 +29,7 @@ class AppStyles {
       color: color ?? AppColors.glassSurface,
       borderRadius: borderRadius ?? panelRadius,
       border: Border.all(color: AppColors.borderLight, width: 1),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.shadowLight,
-          offset: const Offset(-3, -3),
-          blurRadius: 12,
-        ),
-        BoxShadow(
-          color: AppColors.shadowDark,
-          offset: const Offset(5, 5),
-          blurRadius: 14,
-        ),
-      ],
+      boxShadow: AppShadows.glassPanel,
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -65,10 +56,10 @@ class AppStyles {
   );
 
   static const timerText = TextStyle(
-    fontSize: 68,
-    fontWeight: FontWeight.w600,
+    fontSize: 72,
+    fontWeight: FontWeight.w500,
     height: 0.92,
-    letterSpacing: -3.2,
+    letterSpacing: -2.4,
     color: AppColors.primaryText,
     fontFeatures: [FontFeature.tabularFigures()],
   );
