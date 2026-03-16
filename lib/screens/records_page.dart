@@ -161,7 +161,7 @@ class _RecordTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${formatDateTime(record.endedAt)} / ${formatSeconds(record.totalSeconds)} / ${record.endType}',
+                      '${formatDateTime(record.date)} / ${formatSeconds(record.actualEndSec)} / ${record.finishTypeLabel}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF7E8894),

@@ -5,10 +5,12 @@ class RoundedInput extends StatelessWidget {
     super.key,
     required this.controller,
     required this.hintText,
+    this.onChanged,
   });
 
   final TextEditingController controller;
   final String hintText;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,7 @@ class RoundedInput extends StatelessWidget {
       alignment: Alignment.center,
       child: TextField(
         controller: controller,
+        onChanged: onChanged,
         textAlign: TextAlign.center,
         textInputAction: TextInputAction.done,
         style: const TextStyle(

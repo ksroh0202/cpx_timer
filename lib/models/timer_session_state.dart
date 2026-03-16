@@ -5,18 +5,6 @@ import '../core/enums/timer_phase.dart';
 import 'practice_record.dart';
 
 class TimerSessionState {
-  final TimerPhase phase;
-  final String sessionExamName;
-  final String sessionSubject;
-  final String sessionTopic;
-  final int prepRemaining;
-  final int examRemaining;
-  final ExamStage? currentStage;
-  final int examElapsedAtStageStart;
-  final Map<ExamStage, int> stageSeconds;
-  final List<PracticeRecord> records;
-  final bool twoMinuteAlertShown;
-
   const TimerSessionState({
     required this.phase,
     required this.sessionExamName,
@@ -30,6 +18,18 @@ class TimerSessionState {
     required this.records,
     required this.twoMinuteAlertShown,
   });
+
+  final TimerPhase phase;
+  final String sessionExamName;
+  final String sessionSubject;
+  final String sessionTopic;
+  final int prepRemaining;
+  final int examRemaining;
+  final ExamStage? currentStage;
+  final int examElapsedAtStageStart;
+  final Map<ExamStage, int> stageSeconds;
+  final List<PracticeRecord> records;
+  final bool twoMinuteAlertShown;
 
   factory TimerSessionState.initial() {
     return TimerSessionState(
@@ -80,6 +80,8 @@ class TimerSessionState {
   }
 
   int get examElapsed => TimerConstants.examTotalSeconds - examRemaining;
+  int get overtimeSeconds => examRemaining < 0 ? -examRemaining : 0;
+  bool get isOvertime => examElapsed > TimerConstants.examTotalSeconds;
 
   bool get isRunning => phase == TimerPhase.prep || phase == TimerPhase.exam;
 
@@ -96,6 +98,9 @@ class TimerSessionState {
       case TimerPhase.prep:
         return '준비 시간';
       case TimerPhase.exam:
+        if (isOvertime) {
+          return '시간 초과';
+        }
         if (examRemaining <= TimerConstants.twoMinuteWarningSeconds) {
           return '2분 전';
         }
@@ -103,7 +108,7 @@ class TimerSessionState {
       case TimerPhase.pausedPrep:
         return '준비 시간 일시정지';
       case TimerPhase.pausedExam:
-        return '세션 일시정지';
+        return isOvertime ? '시간 초과 일시정지' : '세션 일시정지';
       case TimerPhase.finished:
         return '세션 종료';
     }

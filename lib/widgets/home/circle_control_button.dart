@@ -37,7 +37,8 @@ class CircleControlButton extends StatelessWidget {
                   BoxShadow(
                     color: const Color(0xFF8294A8).withValues(alpha: 0.10),
                     blurRadius: 18,
-                    offset: const Offset(0, 8),
+                    spreadRadius: -6,
+                    offset: const Offset(0, 7),
                   ),
                 ],
               ),

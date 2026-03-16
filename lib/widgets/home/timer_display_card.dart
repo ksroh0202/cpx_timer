@@ -9,14 +9,12 @@ import '../../models/timer_session_state.dart';
 import '../../utils/formatters.dart';
 import 'circle_control_button.dart';
 import 'pill_button.dart';
-import 'rounded_input.dart';
 import 'stage_button.dart';
 
 class TimerDisplayCard extends StatelessWidget {
   const TimerDisplayCard({
     super.key,
     required this.state,
-    required this.examNameController,
     required this.selectedSubject,
     required this.selectedTopic,
     required this.onSubjectTap,
@@ -31,7 +29,6 @@ class TimerDisplayCard extends StatelessWidget {
   });
 
   final TimerSessionState state;
-  final TextEditingController examNameController;
   final String selectedSubject;
   final String selectedTopic;
   final VoidCallback onSubjectTap;
@@ -51,17 +48,16 @@ class TimerDisplayCard extends StatelessWidget {
         final width = constraints.maxWidth;
         final compact = width < 360;
         final timerFontSize = math.min(width * 0.28, 110.0);
-        final sectionGap = compact ? 14.0 : 18.0;
+        final sectionGap = compact ? 24.0 : 28.0;
+        final progressGap = compact ? 12.0 : 14.0;
         final stageGap = compact ? 6.0 : 8.0;
+        final timerColor = state.isOvertime
+            ? const Color(0xFFC56A2D)
+            : const Color(0xFF2F3A44);
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RoundedInput(
-              controller: examNameController,
-              hintText: '연습 이름',
-            ),
-            SizedBox(height: sectionGap),
             Row(
               children: [
                 Expanded(
@@ -79,7 +75,7 @@ class TimerDisplayCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: compact ? 28 : 36),
+            SizedBox(height: sectionGap),
             SizedBox(
               height: compact ? 108 : 124,
               child: Center(
@@ -93,13 +89,18 @@ class TimerDisplayCard extends StatelessWidget {
                       fontWeight: FontWeight.w300,
                       height: 0.92,
                       letterSpacing: -3.8,
-                      color: const Color(0xFF2F3A44),
+                      color: timerColor,
                     ),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: compact ? 24 : 28),
+            SizedBox(height: progressGap),
+            _SessionProgressBar(
+              state: state,
+              compact: compact,
+            ),
+            SizedBox(height: sectionGap),
             Row(
               children: List.generate(ExamStage.values.length, (index) {
                 final stage = ExamStage.values[index];
@@ -118,7 +119,7 @@ class TimerDisplayCard extends StatelessWidget {
                 );
               }),
             ),
-            SizedBox(height: compact ? 28 : 32),
+            SizedBox(height: sectionGap),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -156,6 +157,87 @@ class TimerDisplayCard extends StatelessWidget {
       return formatSeconds(TimerConstants.examTotalSeconds);
     }
 
+    if (state.isOvertime) {
+      return '+${formatSeconds(state.overtimeSeconds)}';
+    }
+
     return formatSeconds(state.examRemaining);
+  }
+}
+
+class _SessionProgressBar extends StatelessWidget {
+  const _SessionProgressBar({
+    required this.state,
+    required this.compact,
+  });
+
+  final TimerSessionState state;
+  final bool compact;
+
+  bool get _isPrepPhase =>
+      state.phase == TimerPhase.prep || state.phase == TimerPhase.pausedPrep;
+
+  int get _currentSeconds {
+    if (_isPrepPhase) {
+      return (TimerConstants.prepTotalSeconds - state.prepRemaining).clamp(
+        0,
+        TimerConstants.prepTotalSeconds,
+      );
+    }
+
+    return state.examElapsed.clamp(0, TimerConstants.examTotalSeconds);
+  }
+
+  int get _totalSeconds =>
+      _isPrepPhase
+          ? TimerConstants.prepTotalSeconds
+          : TimerConstants.examTotalSeconds;
+
+  double get _progressValue {
+    if (state.isOvertime) {
+      return 1;
+    }
+
+    if (_totalSeconds == 0) {
+      return 0;
+    }
+
+    return (_currentSeconds / _totalSeconds).clamp(0.0, 1.0);
+  }
+
+  String get _label =>
+      _isPrepPhase
+          ? '\uC900\uBE44 \uC9C4\uD589\uB3C4'
+          : '\uC2DC\uD5D8 \uC9C4\uD589\uB3C4';
+
+  String get _trailingText {
+    if (state.isOvertime) {
+      return '+${formatSeconds(state.overtimeSeconds)}';
+    }
+
+    return '${formatSeconds(_currentSeconds)} / ${formatSeconds(_totalSeconds)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        height: compact ? 3 : 4,
+        color: Colors.black.withValues(alpha: 0.12),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: AnimatedFractionallySizedBox(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            widthFactor: _progressValue,
+            child: Container(
+              height: double.infinity,
+              color: Colors.black.withValues(alpha: 0.78),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

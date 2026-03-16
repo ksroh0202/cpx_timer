@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../controllers/home_timer_controller.dart';
@@ -11,6 +13,7 @@ import '../widgets/home/stage_summary_card.dart';
 import '../widgets/home/timer_display_card.dart';
 import 'records_page.dart';
 import 'result_page.dart';
+import 'statistics_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +24,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final HomeTimerController _controller = HomeTimerController();
-  final TextEditingController _examNameController = TextEditingController();
 
   int _selectedTab = 0;
   String _selectedSubject = defaultSubject;
@@ -37,7 +39,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _examNameController.dispose();
     _controller.disposeController();
     _controller.dispose();
     super.dispose();
@@ -47,7 +48,14 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     await Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => ResultPage(record: record)));
+    ).push(
+      MaterialPageRoute(
+        builder: (_) => ResultPage(
+          record: record,
+          onRecordUpdated: _handleRecordUpdated,
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmReset() async {
@@ -117,11 +125,40 @@ class _HomePageState extends State<HomePage> {
       _selectedSubject = sanitizeSubject(value);
       _selectedTopic = defaultTopic;
     });
+    _syncSessionMetadata();
   }
 
   void _updateTopic(String? value) {
     setState(() {
       _selectedTopic = sanitizeTopicForSubject(_selectedSubject, value);
+    });
+    _syncSessionMetadata();
+  }
+
+  void _syncSessionMetadata() {
+    if (_controller.state.phase == TimerPhase.idle) {
+      return;
+    }
+
+    unawaited(
+      _controller.syncSessionMetadata(
+        subject: _selectedSubject,
+        topic: _selectedTopic,
+      ),
+    );
+  }
+
+  Future<void> _handleRecordUpdated(PracticeRecord record) async {
+    await _controller.updateRecord(record);
+    if (_controller.latestFinishedRecordId == record.id) {
+      _applyRecordToDraft(record);
+    }
+  }
+
+  void _applyRecordToDraft(PracticeRecord record) {
+    setState(() {
+      _selectedSubject = record.subject;
+      _selectedTopic = record.topic;
     });
   }
 
@@ -172,12 +209,38 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               for (final option in options)
-                ListTile(
-                  title: Text(option),
-                  trailing: option == currentValue
-                      ? const Icon(Icons.check_rounded)
-                      : null,
-                  onTap: () => Navigator.of(context).pop(option),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  child: Material(
+                    color: option == currentValue
+                        ? const Color(0xFFE3EAF4)
+                        : const Color(0xFFE9EEF3),
+                    borderRadius: BorderRadius.circular(18),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      title: Text(
+                        option,
+                        style: TextStyle(
+                          fontWeight: option == currentValue
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: const Color(0xFF2F3A44),
+                        ),
+                      ),
+                      trailing: option == currentValue
+                          ? const Icon(
+                              Icons.check_rounded,
+                              color: Color(0xFF2E6BFF),
+                            )
+                          : const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Color(0xFF9AA6B2),
+                            ),
+                      onTap: () => Navigator.of(context).pop(option),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -265,7 +328,6 @@ class _HomePageState extends State<HomePage> {
 
   void _startSession() {
     _controller.startSession(
-      examName: _examNameController.text,
       subject: _selectedSubject,
       topic: _selectedTopic,
     );
@@ -309,6 +371,36 @@ class _HomePageState extends State<HomePage> {
     return null;
   }
 
+  Widget _buildTabContent(TimerSessionState state) {
+    switch (_selectedTab) {
+      case 0:
+        return _TimerTab(
+          state: state,
+          controller: _controller,
+          selectedSubject: _selectedSubject,
+          selectedTopic: _selectedTopic,
+          onSubjectTap: _pickSubject,
+          onTopicTap: _pickTopic,
+          onReset: _confirmReset,
+          onStop: _confirmEndEarly,
+          primaryAction: _primaryButtonAction(state),
+          primaryIcon: _primaryButtonIcon(state),
+          onStageSelected: _switchStageByIndex,
+        );
+      case 1:
+        return RecordsPage(
+          records: state.records,
+          onOpenRecord: _openResultPage,
+          onDeleteRecord: _confirmDeleteRecord,
+          onClearAll: _confirmClearAllRecords,
+        );
+      case 2:
+        return StatisticsPage(records: state.records);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -333,27 +425,7 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   Expanded(
-                    child: _selectedTab == 0
-                        ? _TimerTab(
-                            state: state,
-                            controller: _controller,
-                            examNameController: _examNameController,
-                            selectedSubject: _selectedSubject,
-                            selectedTopic: _selectedTopic,
-                            onSubjectTap: _pickSubject,
-                            onTopicTap: _pickTopic,
-                            onReset: _confirmReset,
-                            onStop: _confirmEndEarly,
-                            primaryAction: _primaryButtonAction(state),
-                            primaryIcon: _primaryButtonIcon(state),
-                            onStageSelected: _switchStageByIndex,
-                          )
-                        : RecordsPage(
-                            records: state.records,
-                            onOpenRecord: _openResultPage,
-                            onDeleteRecord: _confirmDeleteRecord,
-                            onClearAll: _confirmClearAllRecords,
-                          ),
+                    child: _buildTabContent(state),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -380,7 +452,6 @@ class _TimerTab extends StatelessWidget {
   const _TimerTab({
     required this.state,
     required this.controller,
-    required this.examNameController,
     required this.selectedSubject,
     required this.selectedTopic,
     required this.onSubjectTap,
@@ -394,7 +465,6 @@ class _TimerTab extends StatelessWidget {
 
   final TimerSessionState state;
   final HomeTimerController controller;
-  final TextEditingController examNameController;
   final String selectedSubject;
   final String selectedTopic;
   final VoidCallback onSubjectTap;
@@ -409,47 +479,45 @@ class _TimerTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final availableHeight = constraints.maxHeight;
-        final outerPadding = availableHeight < 760 ? 6.0 : 14.0;
-        final gap = availableHeight < 760 ? 12.0 : 16.0;
+        final gap = constraints.maxHeight < 760 ? 24.0 : 28.0;
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(6, outerPadding, 6, outerPadding),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: availableHeight - outerPadding * 2,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: SizedBox(
+                height: constraints.maxHeight - 14,
                 child: GlassCard(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TimerDisplayCard(
-                        state: state,
-                        examNameController: examNameController,
-                        selectedSubject: selectedSubject,
-                        selectedTopic: selectedTopic,
-                        onSubjectTap: onSubjectTap,
-                        onTopicTap: onTopicTap,
-                        onStageSelected: onStageSelected,
-                        primaryAction: primaryAction,
-                        primaryIcon: primaryIcon,
-                        onReset: onReset,
-                        onStop: onStop,
-                        canReset:
-                            state.isRunning ||
-                            state.isPaused ||
-                            state.phase == TimerPhase.finished,
-                        canStop: state.isExamActive,
-                      ),
-                      SizedBox(height: gap),
-                      StageSummaryCard(
-                        state: state,
-                        previewStageSeconds: controller.previewStageSeconds,
-                      ),
-                    ],
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(bottom: gap),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TimerDisplayCard(
+                          state: state,
+                          selectedSubject: selectedSubject,
+                          selectedTopic: selectedTopic,
+                          onSubjectTap: onSubjectTap,
+                          onTopicTap: onTopicTap,
+                          onStageSelected: onStageSelected,
+                          primaryAction: primaryAction,
+                          primaryIcon: primaryIcon,
+                          onReset: onReset,
+                          onStop: onStop,
+                          canReset:
+                              state.isRunning ||
+                              state.isPaused ||
+                              state.phase == TimerPhase.finished,
+                          canStop: state.isExamActive,
+                        ),
+                        SizedBox(height: gap),
+                        StageSummaryCard(
+                          state: state,
+                          previewStageSeconds: controller.previewStageSeconds,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -498,6 +566,14 @@ class _BottomNavigationBar extends StatelessWidget {
               label: '기록',
               selected: selectedIndex == 1,
               onTap: () => onChanged(1),
+            ),
+          ),
+          Expanded(
+            child: _BottomNavItem(
+              icon: Icons.bar_chart_rounded,
+              label: '통계',
+              selected: selectedIndex == 2,
+              onTap: () => onChanged(2),
             ),
           ),
         ],

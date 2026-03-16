@@ -1,10 +1,13 @@
 // 앱의 진입점과 전역 테마 구성을 담당한다.
 import 'package:flutter/material.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'screens/home_page.dart';
 import 'theme/app_theme.dart';
 
 // 앱 실행이 시작되는 가장 첫 진입점입니다.
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await WakelockPlus.enable();
   runApp(const CpxTimerApp());
 }
 

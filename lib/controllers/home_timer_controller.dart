@@ -16,8 +16,10 @@ class HomeTimerController extends ChangeNotifier {
   final TimerService _timerService;
 
   TimerSessionState _state = TimerSessionState.initial();
+  String? _latestFinishedRecordId;
 
   TimerSessionState get state => _state;
+  String? get latestFinishedRecordId => _latestFinishedRecordId;
 
   VoidCallback? onTwoMinuteAlert;
   Future<void> Function(PracticeRecord record)? onSessionFinished;
@@ -29,12 +31,16 @@ class HomeTimerController extends ChangeNotifier {
   }
 
   Future<void> clearAllRecords() async {
+    _latestFinishedRecordId = null;
     _state = _state.copyWith(records: const []);
     notifyListeners();
     await RecordStorage.saveRecords(_state.records);
   }
 
   Future<void> deleteRecord(String id) async {
+    if (_latestFinishedRecordId == id) {
+      _latestFinishedRecordId = null;
+    }
     _state = _state.copyWith(
       records: _state.records.where((record) => record.id != id).toList(),
     );
@@ -55,8 +61,110 @@ class HomeTimerController extends ChangeNotifier {
       sessionTopic: normalizedTopic,
       records: _state.records,
     );
+    _latestFinishedRecordId = null;
     notifyListeners();
     _startPrepTicker();
+  }
+
+  void updateSessionMetadata({
+    String? examName,
+    String? subject,
+    String? topic,
+  }) {
+    final normalizedSubject = subject == null
+        ? _state.sessionSubject
+        : sanitizeSubject(subject);
+    final normalizedExamName = examName == null
+        ? _state.sessionExamName
+        : sanitizeExamName(examName);
+    final normalizedTopic = sanitizeTopicForSubject(
+      normalizedSubject,
+      topic ?? _state.sessionTopic,
+    );
+
+    if (_state.sessionExamName == normalizedExamName &&
+        _state.sessionSubject == normalizedSubject &&
+        _state.sessionTopic == normalizedTopic) {
+      return;
+    }
+
+    _state = _state.copyWith(
+      sessionExamName: normalizedExamName,
+      sessionSubject: normalizedSubject,
+      sessionTopic: normalizedTopic,
+    );
+    notifyListeners();
+  }
+
+  Future<PracticeRecord?> syncSessionMetadata({
+    String? examName,
+    String? subject,
+    String? topic,
+  }) async {
+    updateSessionMetadata(
+      examName: examName,
+      subject: subject,
+      topic: topic,
+    );
+
+    if (_state.phase != TimerPhase.finished || _latestFinishedRecordId == null) {
+      return null;
+    }
+
+    return updateRecordMetadata(
+      _latestFinishedRecordId!,
+      examName: examName,
+      subject: subject,
+      topic: topic,
+    );
+  }
+
+  Future<PracticeRecord?> updateRecordMetadata(
+    String id, {
+    String? examName,
+    String? subject,
+    String? topic,
+  }) async {
+    final index = _state.records.indexWhere((record) => record.id == id);
+    if (index < 0) {
+      return null;
+    }
+
+    final updatedRecord = _state.records[index].copyWith(
+      examName: examName,
+      subject: subject,
+      topic: topic,
+    );
+    await updateRecord(updatedRecord);
+    return updatedRecord;
+  }
+
+  Future<void> updateRecord(PracticeRecord updatedRecord) async {
+    final index = _state.records.indexWhere(
+      (record) => record.id == updatedRecord.id,
+    );
+    if (index < 0) {
+      return;
+    }
+
+    final updatedRecords = List<PracticeRecord>.from(_state.records);
+    updatedRecords[index] = updatedRecord;
+
+    _state = _state.copyWith(
+      records: updatedRecords,
+      sessionExamName: _latestFinishedRecordId == updatedRecord.id
+          ? updatedRecord.examName
+          : _state.sessionExamName,
+      sessionSubject: _latestFinishedRecordId == updatedRecord.id
+          ? updatedRecord.subject
+          : _state.sessionSubject,
+      sessionTopic: _latestFinishedRecordId == updatedRecord.id
+          ? updatedRecord.topic
+          : _state.sessionTopic,
+    );
+    notifyListeners();
+
+    await RecordStorage.saveRecords(_state.records);
   }
 
   void skipPrepAndStartExam() {
@@ -108,7 +216,7 @@ class HomeTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> finishSession({required String endType}) async {
+  Future<void> finishSession({String? finishType, String? endType}) async {
     _timerService.cancelTimer();
     _timerService.playSound('end.mp3');
 
@@ -117,18 +225,25 @@ class HomeTimerController extends ChangeNotifier {
       _commitCurrentStageTime();
     }
 
+    final actualEndSec = _state.examElapsed;
     final record = PracticeRecord(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       examName: _state.sessionExamName,
       subject: _state.sessionSubject,
       topic: _state.sessionTopic,
-      endedAt: DateTime.now(),
-      totalSeconds: _state.examElapsed,
+      date: DateTime.now(),
+      plannedDurationSec: TimerConstants.examTotalSeconds,
+      actualEndSec: actualEndSec,
+      finishType: _resolveFinishType(
+        finishType: finishType,
+        endType: endType,
+        actualEndSec: actualEndSec,
+      ),
       historySeconds: _state.stageSeconds[ExamStage.historyTaking] ?? 0,
       physicalSeconds: _state.stageSeconds[ExamStage.physicalExam] ?? 0,
       educationSeconds: _state.stageSeconds[ExamStage.patientEducation] ?? 0,
-      endType: endType,
     );
+    _latestFinishedRecordId = record.id;
 
     _state = _state.copyWith(
       phase: TimerPhase.finished,
@@ -142,6 +257,7 @@ class HomeTimerController extends ChangeNotifier {
 
   void resetSession() {
     _timerService.cancelTimer();
+    _latestFinishedRecordId = null;
     _state = TimerSessionState.initial().copyWith(records: _state.records);
     notifyListeners();
   }
@@ -200,24 +316,17 @@ class HomeTimerController extends ChangeNotifier {
       onTick: (_) {
         if (_state.phase != TimerPhase.exam) return;
 
-        if (_state.examRemaining > 1) {
-          final nextRemaining = _state.examRemaining - 1;
-          _state = _state.copyWith(examRemaining: nextRemaining);
-          notifyListeners();
-
-          if (nextRemaining == TimerConstants.twoMinuteWarningSeconds &&
-              !_state.twoMinuteAlertShown) {
-            _state = _state.copyWith(twoMinuteAlertShown: true);
-            notifyListeners();
-            onTwoMinuteAlert?.call();
-            _timerService.playSound('warning.mp3');
-          }
-          return;
-        }
-
-        _state = _state.copyWith(examRemaining: 0);
+        final nextRemaining = _state.examRemaining - 1;
+        _state = _state.copyWith(examRemaining: nextRemaining);
         notifyListeners();
-        finishSession(endType: '정상 종료');
+
+        if (nextRemaining == TimerConstants.twoMinuteWarningSeconds &&
+            !_state.twoMinuteAlertShown) {
+          _state = _state.copyWith(twoMinuteAlertShown: true);
+          notifyListeners();
+          onTwoMinuteAlert?.call();
+          _timerService.playSound('warning.mp3');
+        }
       },
     );
   }
@@ -232,5 +341,22 @@ class HomeTimerController extends ChangeNotifier {
     final updated = Map<ExamStage, int>.from(_state.stageSeconds);
     updated[currentStage] = (updated[currentStage] ?? 0) + delta;
     _state = _state.copyWith(stageSeconds: updated);
+  }
+
+  String _resolveFinishType({
+    String? finishType,
+    String? endType,
+    required int actualEndSec,
+  }) {
+    if (actualEndSec >= TimerConstants.examTotalSeconds) {
+      return finishTypeOvertime;
+    }
+
+    final direct = finishType?.trim();
+    if (direct == finishTypeEarly) {
+      return finishTypeEarly;
+    }
+
+    return finishTypeEarly;
   }
 }
