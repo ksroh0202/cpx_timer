@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/enums/exam_stage.dart';
 import '../../models/timer_session_state.dart';
-import '../../theme/app_colors.dart';
 import '../../utils/formatters.dart';
-import '../glass_widgets.dart';
-import '../stage_row.dart';
+import 'stats_card.dart';
 
 class StageSummaryCard extends StatelessWidget {
   const StageSummaryCard({
@@ -19,34 +17,23 @@ class StageSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
-      height: 200,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          StageRow(
-            label: ExamStage.historyTaking.label,
-            value: formatSeconds(previewStageSeconds(ExamStage.historyTaking)),
-          ),
-          Divider(height: 1, color: AppColors.borderLight),
-          StageRow(
-            label: ExamStage.physicalExam.label,
-            value: formatSeconds(previewStageSeconds(ExamStage.physicalExam)),
-          ),
-          Divider(height: 1, color: AppColors.borderLight),
-          StageRow(
-            label: ExamStage.patientEducation.label,
-            value: formatSeconds(previewStageSeconds(ExamStage.patientEducation)),
-          ),
-          Divider(height: 1, color: AppColors.borderLight),
-          StageRow(
-            label: '총 사용 시간',
-            value: formatSeconds(state.examElapsed),
-            isBold: true,
-          ),
-        ],
-      ),
+    return StatsCard(
+      rows: [
+        (
+          label: ExamStage.historyTaking.label,
+          value: formatSeconds(previewStageSeconds(ExamStage.historyTaking)),
+        ),
+        (
+          label: ExamStage.physicalExam.label,
+          value: formatSeconds(previewStageSeconds(ExamStage.physicalExam)),
+        ),
+        (
+          label: ExamStage.patientEducation.label,
+          value: formatSeconds(previewStageSeconds(ExamStage.patientEducation)),
+        ),
+      ],
+      totalLabel: '총 사용 시간',
+      totalValue: formatSeconds(state.examElapsed),
     );
   }
 }

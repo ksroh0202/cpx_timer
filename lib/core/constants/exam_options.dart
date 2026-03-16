@@ -1,13 +1,13 @@
-const String defaultExamName = '이름 없는 연습';
-const String defaultSubject = '기타';
-const String defaultTopic = '기타';
+const String defaultExamName = '연습 이름';
+const String defaultSubject = '과목 선택';
+const String defaultTopic = '주제 선택';
 
 const List<String> examSubjects = [
   '소화기',
   '순환기',
   '호흡기',
   '신장/비뇨',
-  '전신',
+  '감염',
   '근골격계',
   '정신/신경',
   '여성/소아',
@@ -19,38 +19,38 @@ const Map<String, List<String>> examTopicsBySubject = {
   '소화기': [
     '복통',
     '소화불량',
-    '속쓰림',
+    '혈변',
     '구토',
     '변비',
     '설사',
-    '혈변',
+    '황달',
     '기타',
   ],
   '순환기': [
     '가슴통증',
-    '두근거림',
     '호흡곤란',
+    '심계항진',
     '실신',
     '부종',
     '기타',
   ],
   '호흡기': [
     '기침',
-    '가래',
     '객혈',
+    '가래',
     '호흡곤란',
     '흉통',
     '기타',
   ],
   '신장/비뇨': [
     '배뇨통',
-    '혈뇨',
+    '핍뇨',
     '빈뇨',
     '다뇨',
     '옆구리 통증',
     '기타',
   ],
-  '전신': [
+  '감염': [
     '발열',
     '피로',
     '체중감소',
@@ -61,9 +61,9 @@ const Map<String, List<String>> examTopicsBySubject = {
   '근골격계': [
     '관절통',
     '근육통',
-    '허리통증',
-    '어깨통증',
-    '목통증',
+    '허리 통증',
+    '다리 통증',
+    '목 통증',
     '기타',
   ],
   '정신/신경': [

@@ -99,13 +99,13 @@ class TimerSessionState {
         if (examRemaining <= TimerConstants.twoMinuteWarningSeconds) {
           return '2분 전';
         }
-        return '시험 진행 중';
+        return '세션 진행 중';
       case TimerPhase.pausedPrep:
         return '준비 시간 일시정지';
       case TimerPhase.pausedExam:
-        return '시험 일시정지';
+        return '세션 일시정지';
       case TimerPhase.finished:
-        return '시험 종료';
+        return '세션 종료';
     }
   }
 }
