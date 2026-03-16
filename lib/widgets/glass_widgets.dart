@@ -6,7 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_styles.dart';
 
 const double _glassBlur = 30;
-const double _glassRadius = 20;
+const double _glassRadius = 24;
 const double _glassMinHeight = 64;
 
 class GlassContainer extends StatelessWidget {
@@ -162,6 +162,45 @@ class GlassButton extends StatelessWidget {
   }
 }
 
+class GlassIconButton extends StatelessWidget {
+  const GlassIconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.size = 64,
+    this.tint,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final double size;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: onPressed == null ? 0.5 : 1,
+      child: Material(
+        color: AppColors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(size / 2),
+          onTap: onPressed,
+          child: GlassContainer(
+            width: size,
+            height: size,
+            minHeight: size,
+            borderRadius: size / 2,
+            blur: 24,
+            padding: EdgeInsets.zero,
+            surfaceColor: AppColors.glassSurfaceSecondary,
+            child: Icon(icon, color: tint ?? AppColors.primaryText, size: 28),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class GlassSegmentedControl extends StatelessWidget {
   const GlassSegmentedControl({
     super.key,
@@ -232,8 +271,9 @@ class _SegmentItem extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.primaryText,
+                    color: selected ? AppColors.primaryText : AppColors.secondaryText,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 14,
                   ),
             ),
           ),
@@ -271,7 +311,7 @@ class GlassBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       height: height,
-      borderRadius: 16,
+      borderRadius: 24,
       blur: 32,
       padding: const EdgeInsets.all(6),
       surfaceColor: AppColors.glassSurfaceSecondary,
@@ -317,7 +357,7 @@ class _BottomBarItem extends StatelessWidget {
           decoration: AppStyles.glassPanelDecoration(
             borderRadius: BorderRadius.circular(12),
             color: selected
-                ? AppColors.glassSurface
+                ? AppColors.accent.withValues(alpha: 0.20)
                 : AppColors.glassSurfaceSecondary,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -327,13 +367,13 @@ class _BottomBarItem extends StatelessWidget {
               Icon(
                 item.icon,
                 size: 18,
-                color: AppColors.primaryText,
+                color: selected ? AppColors.accent : AppColors.secondaryText,
               ),
               const SizedBox(width: 6),
               Text(
                 item.label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.primaryText,
+                      color: selected ? AppColors.accent : AppColors.secondaryText,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),

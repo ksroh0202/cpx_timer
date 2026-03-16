@@ -3,27 +3,26 @@ import 'package:flutter/material.dart';
 class AppColors {
   static const transparent = Colors.transparent;
 
-  static const background = Color(0xFFCFD2D9);
+  static const background = Color(0xFFCFD9DF);
+  static const backgroundTop = Color(0xFFCFD9DF);
+  static const backgroundBottom = Color(0xFFE2EBF0);
 
-  static const glassSurface = Color(0xFFF1F0EC);
+  static const blobPrimary = Color(0xFFA1C4FD);
+  static const blobSecondary = Color(0xFFC2E9FB);
 
-  static const glassSurfaceSecondary = Color(0xFFE8E9ED);
+  static const glassSurface = Color(0x47FFFFFF);
+  static const glassSurfaceSecondary = Color(0x3DFFFFFF);
 
-  static const primaryText = Color(0xFF222222);
+  static const primaryText = Color(0xFF1F2A37);
+  static const secondaryText = Color(0xFF5D6B7B);
+  static const accent = Color(0xFF2563EB);
 
-  static const secondaryText = Color(0xFF666666);
+  static final borderLight = Colors.white.withValues(alpha: 0.42);
+  static final shadowDark = const Color(0xFF6B7280).withValues(alpha: 0.16);
+  static final shadowLight = Colors.white.withValues(alpha: 0.55);
 
-  static final borderLight = Colors.white.withValues(alpha: 0.10);
-
-  static final shadowDark = Colors.black.withValues(alpha: 0.06);
-
-  static final shadowLight = Colors.white.withValues(alpha: 0.14);
-
-  static const backgroundTop = background;
-  static const backgroundBottom = Color(0xFFD7DADF);
   static const surface = glassSurface;
   static const surfaceSoft = glassSurfaceSecondary;
-  static const accent = primaryText;
   static const accentSoft = secondaryText;
   static const accentMuted = secondaryText;
   static const primaryTextOn = glassSurface;

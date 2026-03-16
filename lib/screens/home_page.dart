@@ -9,7 +9,6 @@ import '../models/timer_session_state.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/glass_widgets.dart';
-import '../widgets/home/stage_summary_card.dart';
 import '../widgets/home/timer_display_card.dart';
 import 'records_page.dart';
 import 'result_page.dart';
@@ -255,23 +254,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _primaryButtonLabel(TimerSessionState state) {
-    if (state.phase == TimerPhase.pausedPrep ||
-        state.phase == TimerPhase.pausedExam) {
-      return '재개';
-    }
-
-    if (state.phase == TimerPhase.prep) {
-      return '바로 시작';
-    }
-
-    if (state.phase == TimerPhase.exam) {
-      return '일시정지';
-    }
-
-    return '시작';
-  }
-
   IconData _primaryButtonIcon(TimerSessionState state) {
     if (state.phase == TimerPhase.pausedPrep ||
         state.phase == TimerPhase.pausedExam) {
@@ -340,7 +322,6 @@ class _HomePageState extends State<HomePage> {
                         onStop: _confirmEndEarly,
                         primaryAction: _primaryButtonAction(state),
                         primaryIcon: _primaryButtonIcon(state),
-                        primaryLabel: _primaryButtonLabel(state),
                         onStageSelected: _switchStageByIndex,
                       )
                     : RecordsPage(
@@ -359,22 +340,22 @@ class _HomePageState extends State<HomePage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
                 child: GlassBottomBar(
-                items: const [
-                  GlassBottomBarItem(
-                    icon: Icons.timer_outlined,
-                    label: '타이머',
-                  ),
-                  GlassBottomBarItem(
-                    icon: Icons.history_rounded,
-                    label: '기록',
-                  ),
-                ],
-                selectedIndex: _selectedTab,
-                onChanged: (index) {
-                  setState(() {
-                    _selectedTab = index;
-                  });
-                },
+                  items: const [
+                    GlassBottomBarItem(
+                      icon: Icons.timer_outlined,
+                      label: '타이머',
+                    ),
+                    GlassBottomBarItem(
+                      icon: Icons.history_rounded,
+                      label: '기록',
+                    ),
+                  ],
+                  selectedIndex: _selectedTab,
+                  onChanged: (index) {
+                    setState(() {
+                      _selectedTab = index;
+                    });
+                  },
                 ),
               ),
             ),
@@ -400,7 +381,6 @@ class _TimerTab extends StatelessWidget {
     required this.onStop,
     required this.primaryAction,
     required this.primaryIcon,
-    required this.primaryLabel,
     required this.onStageSelected,
   });
 
@@ -417,45 +397,46 @@ class _TimerTab extends StatelessWidget {
   final VoidCallback onStop;
   final VoidCallback? primaryAction;
   final IconData primaryIcon;
-  final String primaryLabel;
   final ValueChanged<int> onStageSelected;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.page,
-        AppSpacing.page,
-        AppSpacing.page,
-        AppSpacing.pageBottom,
-      ),
-      children: [
-        TimerDisplayCard(
-          state: state,
-          examNameController: examNameController,
-          selectedSubject: selectedSubject,
-          selectedTopic: selectedTopic,
-          hasSelectedSubject: hasSelectedSubject,
-          hasSelectedTopic: hasSelectedTopic,
-          onSubjectTap: onSubjectTap,
-          onTopicTap: onTopicTap,
-          onStageSelected: onStageSelected,
-          primaryAction: primaryAction,
-          primaryIcon: primaryIcon,
-          onReset: onReset,
-          onStop: onStop,
-          canReset:
-              state.isRunning ||
-              state.isPaused ||
-              state.phase == TimerPhase.finished,
-          canStop: state.isExamActive,
-        ),
-        const SizedBox(height: AppSpacing.section),
-        StageSummaryCard(
-          state: state,
-          previewStageSeconds: controller.previewStageSeconds,
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.page,
+            AppSpacing.page,
+            AppSpacing.pageBottom,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 24),
+            child: TimerDisplayCard(
+              state: state,
+              examNameController: examNameController,
+              selectedSubject: selectedSubject,
+              selectedTopic: selectedTopic,
+              hasSelectedSubject: hasSelectedSubject,
+              hasSelectedTopic: hasSelectedTopic,
+              onSubjectTap: onSubjectTap,
+              onTopicTap: onTopicTap,
+              onStageSelected: onStageSelected,
+              primaryAction: primaryAction,
+              primaryIcon: primaryIcon,
+              onReset: onReset,
+              onStop: onStop,
+              canReset:
+                  state.isRunning ||
+                  state.isPaused ||
+                  state.phase == TimerPhase.finished,
+              canStop: state.isExamActive,
+              previewStageSeconds: controller.previewStageSeconds,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -479,27 +460,19 @@ class _GlassBackground extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: -60,
-            right: -30,
+            top: -80,
+            right: -40,
             child: _GlassGlow(
-              size: 220,
-              color: AppColors.glassSurface.withValues(alpha: 0.30),
+              size: 260,
+              color: AppColors.blobPrimary.withValues(alpha: 0.40),
             ),
           ),
           Positioned(
-            left: -80,
-            top: 220,
-            child: _GlassGlow(
-              size: 180,
-              color: AppColors.shadowLight,
-            ),
-          ),
-          Positioned(
-            right: 10,
+            left: -70,
             bottom: 140,
             child: _GlassGlow(
-              size: 160,
-              color: AppColors.glassSurfaceSecondary.withValues(alpha: 0.18),
+              size: 220,
+              color: AppColors.blobSecondary.withValues(alpha: 0.34),
             ),
           ),
         ],
