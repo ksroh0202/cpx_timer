@@ -277,6 +277,9 @@ class _TrendChartCard extends StatelessWidget {
             selectedIndex! < data.points.length
         ? data.points[selectedIndex!]
         : null;
+    final baselineLabel = data.baselineSec == null
+        ? '\uAE30\uC900'
+        : formatSeconds(data.baselineSec!);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -295,12 +298,12 @@ class _TrendChartCard extends StatelessWidget {
             children: const [
               _TrendLegend(
                 color: Color(0xFFD45C5C),
-                label: '12\uBD84 \uCD08\uACFC',
+                label: '\uAE30\uC900 \uCD08\uACFC',
               ),
               SizedBox(width: 12),
               _TrendLegend(
                 color: Color(0xFF4EA66D),
-                label: '12\uBD84 \uC774\uC804',
+                label: '\uAE30\uC900 \uC774\uC804',
               ),
             ],
           ),
@@ -357,8 +360,8 @@ class _TrendChartCard extends StatelessWidget {
                     Positioned(
                       top: baselineTop - 24,
                       left: 28,
-                      child: const Text(
-                        '12:00',
+                      child: Text(
+                        baselineLabel,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -496,7 +499,8 @@ class _TrendChartCard extends StatelessWidget {
           if (selectedPoint != null) ...[
             const SizedBox(height: 12),
             _TrendInlineTooltip(
-              dateText: _formatTooltipDateTime(selectedPoint.date),
+              dateText:
+                  '${_formatTooltipDateTime(selectedPoint.date)} / \uAE30\uC900 ${formatSeconds(selectedPoint.plannedDurationSec)}',
               detailText:
                   '\uC885\uB8CC ${formatSeconds(selectedPoint.actualEndSec)} / ${_formatDeltaLabel(selectedPoint.deltaSec)}',
               positive: selectedPoint.deltaSec >= 0,

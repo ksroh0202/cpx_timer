@@ -3,7 +3,9 @@ enum TimerPhase {
   idle,
   prep,
   exam,
+  breakTime,
   pausedPrep,
   pausedExam,
+  pausedBreak,
   finished,
 }

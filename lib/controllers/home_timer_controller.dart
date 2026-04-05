@@ -1,3 +1,5 @@
+﻿import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../core/constants/exam_options.dart';
@@ -23,6 +25,39 @@ class HomeTimerController extends ChangeNotifier {
 
   VoidCallback? onTwoMinuteAlert;
   Future<void> Function(PracticeRecord record)? onSessionFinished;
+  static const String _repeatedTopicLabel = '주제없음';
+
+  void increaseExamDuration() {
+    _updateExamDuration(
+      _state.plannedDurationSec + TimerConstants.examAdjustmentStepSeconds,
+    );
+  }
+
+  void decreaseExamDuration() {
+    _updateExamDuration(
+      _state.plannedDurationSec - TimerConstants.examAdjustmentStepSeconds,
+    );
+  }
+
+  void increaseQuestionCount() {
+    _updateQuestionCount(_state.totalQuestions + 1);
+  }
+
+  void decreaseQuestionCount() {
+    _updateQuestionCount(_state.totalQuestions - 1);
+  }
+
+  void increaseBreakDuration() {
+    _updateBreakDuration(
+      _state.breakDurationSec + TimerConstants.breakAdjustmentStepSeconds,
+    );
+  }
+
+  void decreaseBreakDuration() {
+    _updateBreakDuration(
+      _state.breakDurationSec - TimerConstants.breakAdjustmentStepSeconds,
+    );
+  }
 
   Future<void> loadRecords() async {
     final records = await RecordStorage.loadRecords();
@@ -51,10 +86,20 @@ class HomeTimerController extends ChangeNotifier {
   void startSession({String? examName, String? subject, String? topic}) {
     final normalizedSubject = sanitizeSubject(subject);
     final normalizedExamName = sanitizeExamName(examName);
-    final normalizedTopic = sanitizeTopicForSubject(normalizedSubject, topic);
+    final normalizedTopic = _resolveSessionTopic(
+      normalizedSubject,
+      topic,
+      totalQuestions: _state.totalQuestions,
+    );
+    final plannedDurationSec = _state.plannedDurationSec;
 
     _timerService.cancelTimer();
-    _state = TimerSessionState.initial().copyWith(
+    _state = TimerSessionState.initial(
+      plannedDurationSec: plannedDurationSec,
+      totalQuestions: _state.totalQuestions,
+      currentQuestion: TimerConstants.minContinuousQuestionCount,
+      breakDurationSec: _state.breakDurationSec,
+    ).copyWith(
       phase: TimerPhase.prep,
       sessionExamName: normalizedExamName,
       sessionSubject: normalizedSubject,
@@ -77,7 +122,7 @@ class HomeTimerController extends ChangeNotifier {
     final normalizedExamName = examName == null
         ? _state.sessionExamName
         : sanitizeExamName(examName);
-    final normalizedTopic = sanitizeTopicForSubject(
+    final normalizedTopic = _resolveSessionTopic(
       normalizedSubject,
       topic ?? _state.sessionTopic,
     );
@@ -175,6 +220,14 @@ class HomeTimerController extends ChangeNotifier {
     _startExam();
   }
 
+  void skipBreakAndStartNextQuestion() {
+    if (_state.phase != TimerPhase.breakTime &&
+        _state.phase != TimerPhase.pausedBreak) {
+      return;
+    }
+    _startPrepForCurrentQuestion();
+  }
+
   void pauseSession() {
     _timerService.cancelTimer();
 
@@ -182,6 +235,8 @@ class HomeTimerController extends ChangeNotifier {
       _state = _state.copyWith(phase: TimerPhase.pausedPrep);
     } else if (_state.phase == TimerPhase.exam) {
       _state = _state.copyWith(phase: TimerPhase.pausedExam);
+    } else if (_state.phase == TimerPhase.breakTime) {
+      _state = _state.copyWith(phase: TimerPhase.pausedBreak);
     } else {
       return;
     }
@@ -201,6 +256,13 @@ class HomeTimerController extends ChangeNotifier {
       _state = _state.copyWith(phase: TimerPhase.exam);
       notifyListeners();
       _startExamTicker();
+      return;
+    }
+
+    if (_state.phase == TimerPhase.pausedBreak) {
+      _state = _state.copyWith(phase: TimerPhase.breakTime);
+      notifyListeners();
+      _startBreakTicker();
     }
   }
 
@@ -217,48 +279,25 @@ class HomeTimerController extends ChangeNotifier {
   }
 
   Future<void> finishSession({String? finishType, String? endType}) async {
-    _timerService.cancelTimer();
-    _timerService.playSound('end.mp3');
-
-    if (_state.phase == TimerPhase.exam ||
-        _state.phase == TimerPhase.pausedExam) {
-      _commitCurrentStageTime();
+    if (_state.phase != TimerPhase.exam && _state.phase != TimerPhase.pausedExam) {
+      return;
     }
 
-    final actualEndSec = _state.examElapsed;
-    final record = PracticeRecord(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      examName: _state.sessionExamName,
-      subject: _state.sessionSubject,
-      topic: _state.sessionTopic,
-      date: DateTime.now(),
-      plannedDurationSec: TimerConstants.examTotalSeconds,
-      actualEndSec: actualEndSec,
-      finishType: _resolveFinishType(
-        finishType: finishType,
-        endType: endType,
-        actualEndSec: actualEndSec,
-      ),
-      historySeconds: _state.stageSeconds[ExamStage.historyTaking] ?? 0,
-      physicalSeconds: _state.stageSeconds[ExamStage.physicalExam] ?? 0,
-      educationSeconds: _state.stageSeconds[ExamStage.patientEducation] ?? 0,
+    await _completeCurrentQuestion(
+      continueSequence: false,
+      finishType: finishType,
+      endType: endType,
     );
-    _latestFinishedRecordId = record.id;
-
-    _state = _state.copyWith(
-      phase: TimerPhase.finished,
-      records: [record, ..._state.records],
-    );
-    notifyListeners();
-
-    await RecordStorage.saveRecords(_state.records);
-    await onSessionFinished?.call(record);
   }
 
   void resetSession() {
     _timerService.cancelTimer();
     _latestFinishedRecordId = null;
-    _state = TimerSessionState.initial().copyWith(records: _state.records);
+    _state = TimerSessionState.initial(
+      plannedDurationSec: _state.plannedDurationSec,
+      totalQuestions: _state.totalQuestions,
+      breakDurationSec: _state.breakDurationSec,
+    ).copyWith(records: _state.records);
     notifyListeners();
   }
 
@@ -300,7 +339,7 @@ class HomeTimerController extends ChangeNotifier {
     _timerService.cancelTimer();
     _state = _state.copyWith(
       phase: TimerPhase.exam,
-      examRemaining: TimerConstants.examTotalSeconds,
+      examRemaining: _state.plannedDurationSec,
       currentStage: ExamStage.historyTaking,
       examElapsedAtStageStart: 0,
       twoMinuteAlertShown: false,
@@ -317,6 +356,13 @@ class HomeTimerController extends ChangeNotifier {
         if (_state.phase != TimerPhase.exam) return;
 
         final nextRemaining = _state.examRemaining - 1;
+        if (_state.isContinuousMode && nextRemaining <= 0) {
+          _state = _state.copyWith(examRemaining: 0);
+          notifyListeners();
+          unawaited(_completeCurrentQuestion(continueSequence: true));
+          return;
+        }
+
         _state = _state.copyWith(examRemaining: nextRemaining);
         notifyListeners();
 
@@ -328,6 +374,129 @@ class HomeTimerController extends ChangeNotifier {
           _timerService.playSound('warning.mp3');
         }
       },
+    );
+  }
+
+  void _startBreakTicker() {
+    _timerService.startPeriodic(
+      duration: const Duration(seconds: 1),
+      onTick: (_) {
+        if (_state.phase != TimerPhase.breakTime) return;
+
+        if (_state.breakRemaining > 1) {
+          _state = _state.copyWith(breakRemaining: _state.breakRemaining - 1);
+          notifyListeners();
+          return;
+        }
+
+        _state = _state.copyWith(breakRemaining: 0);
+        notifyListeners();
+        _startPrepForCurrentQuestion();
+      },
+    );
+  }
+
+  void _startPrepForCurrentQuestion() {
+    _timerService.cancelTimer();
+    _state = TimerSessionState.initial(
+      plannedDurationSec: _state.plannedDurationSec,
+      totalQuestions: _state.totalQuestions,
+      currentQuestion: _state.currentQuestion,
+      breakDurationSec: _state.breakDurationSec,
+    ).copyWith(
+      phase: TimerPhase.prep,
+      sessionExamName: _state.sessionExamName,
+      sessionSubject: _state.sessionSubject,
+      sessionTopic: _state.sessionTopic,
+      records: _state.records,
+    );
+    notifyListeners();
+    _startPrepTicker();
+  }
+
+  Future<void> _completeCurrentQuestion({
+    required bool continueSequence,
+    String? finishType,
+    String? endType,
+  }) async {
+    _timerService.cancelTimer();
+    _timerService.playSound('end.mp3');
+
+    if (_state.phase == TimerPhase.exam ||
+        _state.phase == TimerPhase.pausedExam) {
+      _commitCurrentStageTime();
+    }
+
+    final record = _createRecord(
+      finishType: finishType,
+      endType: endType,
+    );
+    final updatedRecords = [record, ..._state.records];
+    _latestFinishedRecordId = record.id;
+
+    final hasNextQuestion = continueSequence &&
+        _state.currentQuestion < _state.totalQuestions;
+
+    if (!hasNextQuestion) {
+      _state = _state.copyWith(
+        phase: TimerPhase.finished,
+        records: updatedRecords,
+      );
+      notifyListeners();
+      await RecordStorage.saveRecords(_state.records);
+      await onSessionFinished?.call(record);
+      return;
+    }
+
+    final nextQuestion = _state.currentQuestion + 1;
+    _state = TimerSessionState.initial(
+      plannedDurationSec: _state.plannedDurationSec,
+      totalQuestions: _state.totalQuestions,
+      currentQuestion: nextQuestion,
+      breakDurationSec: _state.breakDurationSec,
+    ).copyWith(
+      phase: _state.breakDurationSec > 0 ? TimerPhase.breakTime : TimerPhase.prep,
+      breakRemaining: _state.breakDurationSec,
+      sessionExamName: _state.sessionExamName,
+      sessionSubject: _state.sessionSubject,
+      sessionTopic: _state.sessionTopic,
+      records: updatedRecords,
+    );
+    notifyListeners();
+
+    await RecordStorage.saveRecords(_state.records);
+
+    if (_state.phase == TimerPhase.breakTime) {
+      _startBreakTicker();
+    } else {
+      _startPrepTicker();
+    }
+  }
+
+  PracticeRecord _createRecord({
+    String? finishType,
+    String? endType,
+  }) {
+    final actualEndSec = _state.examElapsed;
+    return PracticeRecord(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      examName: _state.totalQuestions > 1
+          ? '${_state.sessionExamName} ${_state.currentQuestion}번'
+          : _state.sessionExamName,
+      subject: _state.sessionSubject,
+      topic: _state.totalQuestions > 1 ? _repeatedTopicLabel : _state.sessionTopic,
+      date: DateTime.now(),
+      plannedDurationSec: _state.plannedDurationSec,
+      actualEndSec: actualEndSec,
+      finishType: _resolveFinishType(
+        finishType: finishType,
+        endType: endType,
+        actualEndSec: actualEndSec,
+        plannedDurationSec: _state.plannedDurationSec,
+      ),
+      historySeconds: _state.stageSeconds[ExamStage.historyTaking] ?? 0,
+      physicalSeconds: _state.stageSeconds[ExamStage.physicalExam] ?? 0,
+      educationSeconds: _state.stageSeconds[ExamStage.patientEducation] ?? 0,
     );
   }
 
@@ -347,8 +516,9 @@ class HomeTimerController extends ChangeNotifier {
     String? finishType,
     String? endType,
     required int actualEndSec,
+    required int plannedDurationSec,
   }) {
-    if (actualEndSec >= TimerConstants.examTotalSeconds) {
+    if (actualEndSec >= plannedDurationSec) {
       return finishTypeOvertime;
     }
 
@@ -357,6 +527,76 @@ class HomeTimerController extends ChangeNotifier {
       return finishTypeEarly;
     }
 
-    return finishTypeEarly;
+    return endType == null ? finishTypeEarly : finishTypeEarly;
+  }
+
+  String _resolveSessionTopic(
+    String normalizedSubject,
+    String? topic, {
+    int? totalQuestions,
+  }) {
+    if ((totalQuestions ?? _state.totalQuestions) > 1) {
+      return _repeatedTopicLabel;
+    }
+    return sanitizeTopicForSubject(normalizedSubject, topic);
+  }
+
+  void _updateExamDuration(int nextDurationSec) {
+    if (_state.phase != TimerPhase.idle) {
+      return;
+    }
+
+    final normalizedDuration = nextDurationSec < TimerConstants.minExamTotalSeconds
+        ? TimerConstants.minExamTotalSeconds
+        : nextDurationSec;
+    if (normalizedDuration == _state.plannedDurationSec) {
+      return;
+    }
+
+    _state = _state.copyWith(
+      plannedDurationSec: normalizedDuration,
+      examRemaining: normalizedDuration,
+    );
+    notifyListeners();
+  }
+
+  void _updateQuestionCount(int nextQuestionCount) {
+    if (_state.phase != TimerPhase.idle) {
+      return;
+    }
+
+    final normalizedQuestionCount = nextQuestionCount.clamp(
+      TimerConstants.minContinuousQuestionCount,
+      TimerConstants.maxContinuousQuestionCount,
+    );
+    if (normalizedQuestionCount == _state.totalQuestions) {
+      return;
+    }
+
+    _state = _state.copyWith(
+      totalQuestions: normalizedQuestionCount,
+      currentQuestion: TimerConstants.minContinuousQuestionCount,
+    );
+    notifyListeners();
+  }
+
+  void _updateBreakDuration(int nextBreakDurationSec) {
+    if (_state.phase != TimerPhase.idle) {
+      return;
+    }
+
+    final normalizedBreakDuration = nextBreakDurationSec.clamp(
+      0,
+      TimerConstants.maxBreakSeconds,
+    );
+    if (normalizedBreakDuration == _state.breakDurationSec) {
+      return;
+    }
+
+    _state = _state.copyWith(
+      breakDurationSec: normalizedBreakDuration,
+      breakRemaining: normalizedBreakDuration,
+    );
+    notifyListeners();
   }
 }

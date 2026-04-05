@@ -333,9 +333,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _increaseExamDuration() {
+    _controller.increaseExamDuration();
+  }
+
+  void _decreaseExamDuration() {
+    _controller.decreaseExamDuration();
+  }
+
+  void _increaseQuestionCount() {
+    _controller.increaseQuestionCount();
+  }
+
+  void _decreaseQuestionCount() {
+    _controller.decreaseQuestionCount();
+  }
+
+  void _increaseBreakDuration() {
+    _controller.increaseBreakDuration();
+  }
+
+  void _decreaseBreakDuration() {
+    _controller.decreaseBreakDuration();
+  }
+
   IconData _primaryButtonIcon(TimerSessionState state) {
     if (state.phase == TimerPhase.pausedPrep ||
-        state.phase == TimerPhase.pausedExam) {
+        state.phase == TimerPhase.pausedExam ||
+        state.phase == TimerPhase.pausedBreak) {
       return Icons.play_arrow_rounded;
     }
 
@@ -343,7 +368,8 @@ class _HomePageState extends State<HomePage> {
       return Icons.skip_next_rounded;
     }
 
-    if (state.phase == TimerPhase.exam) {
+    if (state.phase == TimerPhase.exam ||
+        state.phase == TimerPhase.breakTime) {
       return Icons.pause_rounded;
     }
 
@@ -352,7 +378,8 @@ class _HomePageState extends State<HomePage> {
 
   VoidCallback? _primaryButtonAction(TimerSessionState state) {
     if (state.phase == TimerPhase.pausedPrep ||
-        state.phase == TimerPhase.pausedExam) {
+        state.phase == TimerPhase.pausedExam ||
+        state.phase == TimerPhase.pausedBreak) {
       return _controller.resumeSession;
     }
 
@@ -360,7 +387,8 @@ class _HomePageState extends State<HomePage> {
       return _controller.skipPrepAndStartExam;
     }
 
-    if (state.phase == TimerPhase.exam) {
+    if (state.phase == TimerPhase.exam ||
+        state.phase == TimerPhase.breakTime) {
       return _controller.pauseSession;
     }
 
@@ -385,6 +413,12 @@ class _HomePageState extends State<HomePage> {
           onStop: _confirmEndEarly,
           primaryAction: _primaryButtonAction(state),
           primaryIcon: _primaryButtonIcon(state),
+          onDecreaseDuration: _decreaseExamDuration,
+          onIncreaseDuration: _increaseExamDuration,
+          onDecreaseQuestionCount: _decreaseQuestionCount,
+          onIncreaseQuestionCount: _increaseQuestionCount,
+          onDecreaseBreakDuration: _decreaseBreakDuration,
+          onIncreaseBreakDuration: _increaseBreakDuration,
           onStageSelected: _switchStageByIndex,
         );
       case 1:
@@ -460,6 +494,12 @@ class _TimerTab extends StatelessWidget {
     required this.onStop,
     required this.primaryAction,
     required this.primaryIcon,
+    required this.onDecreaseDuration,
+    required this.onIncreaseDuration,
+    required this.onDecreaseQuestionCount,
+    required this.onIncreaseQuestionCount,
+    required this.onDecreaseBreakDuration,
+    required this.onIncreaseBreakDuration,
     required this.onStageSelected,
   });
 
@@ -473,6 +513,12 @@ class _TimerTab extends StatelessWidget {
   final VoidCallback onStop;
   final VoidCallback? primaryAction;
   final IconData primaryIcon;
+  final VoidCallback onDecreaseDuration;
+  final VoidCallback onIncreaseDuration;
+  final VoidCallback onDecreaseQuestionCount;
+  final VoidCallback onIncreaseQuestionCount;
+  final VoidCallback onDecreaseBreakDuration;
+  final VoidCallback onIncreaseBreakDuration;
   final ValueChanged<int> onStageSelected;
 
   @override
@@ -505,6 +551,15 @@ class _TimerTab extends StatelessWidget {
                           primaryIcon: primaryIcon,
                           onReset: onReset,
                           onStop: onStop,
+                          onDecreaseDuration: onDecreaseDuration,
+                          onIncreaseDuration: onIncreaseDuration,
+                          onDecreaseQuestionCount: onDecreaseQuestionCount,
+                          onIncreaseQuestionCount: onIncreaseQuestionCount,
+                          onDecreaseBreakDuration: onDecreaseBreakDuration,
+                          onIncreaseBreakDuration: onIncreaseBreakDuration,
+                          canAdjustDuration: state.phase == TimerPhase.idle,
+                          canAdjustContinuousSettings:
+                              state.phase == TimerPhase.idle,
                           canReset:
                               state.isRunning ||
                               state.isPaused ||

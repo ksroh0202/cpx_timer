@@ -89,30 +89,32 @@ class PracticeStatisticsService {
       weakSubjectRate: weakSubject.rate,
       distribution: [
         DistributionBucket(
-          label: '\u0031\u0030\uBD84 \uBBF8\uB9CC',
-          count: records.where((record) => record.actualEndSec < 600).length,
+          label: '\u0031\uBD84 \uC774\uC0C1 \uC5EC\uC720',
+          count: records.where((record) => _deltaFromPlan(record) <= -60).length,
         ),
         DistributionBucket(
-          label: '\u0031\u0030~\u0031\u0031\uBD84',
+          label: '\u0033\u0030~\u0035\u0039\uCD08 \uC5EC\uC720',
           count: records
               .where(
                 (record) =>
-                    record.actualEndSec >= 600 && record.actualEndSec < 660,
+                    _deltaFromPlan(record) > -60 &&
+                    _deltaFromPlan(record) <= -30,
               )
               .length,
         ),
         DistributionBucket(
-          label: '\u0031\u0031~\u0031\u0032\uBD84',
+          label: '\u0033\u0030\uCD08 \uC774\uB0B4',
           count: records
               .where(
                 (record) =>
-                    record.actualEndSec >= 660 && record.actualEndSec <= 720,
+                    _deltaFromPlan(record) > -30 &&
+                    _deltaFromPlan(record) <= 30,
               )
               .length,
         ),
         DistributionBucket(
-          label: '\u0031\u0032\uBD84 \uCD08\uACFC',
-          count: records.where((record) => record.actualEndSec > 720).length,
+          label: '\u0033\u0030\uCD08 \uC774\uC0C1 \uCD08\uACFC',
+          count: records.where((record) => _deltaFromPlan(record) > 30).length,
         ),
       ],
     );
@@ -124,13 +126,14 @@ class PracticeStatisticsService {
     final points = sortedRecords
         .map(
           (record) {
-            final deltaSec = record.actualEndSec - 720;
+            final deltaSec = _deltaFromPlan(record);
             final displayDeltaSec = deltaSec.clamp(
               -trendDisplayCapSec,
               trendDisplayCapSec,
             );
             return TrendBarPoint(
               date: record.date,
+              plannedDurationSec: record.plannedDurationSec,
               actualEndSec: record.actualEndSec,
               deltaSec: deltaSec,
               displayDeltaSec: displayDeltaSec,
@@ -141,6 +144,7 @@ class PracticeStatisticsService {
 
     return TrendChartData(
       points: points,
+      baselineSec: _resolveBaselineSeconds(sortedRecords),
       maxAbsDeltaSec: trendDisplayCapSec,
     );
   }
@@ -195,7 +199,22 @@ class PracticeStatisticsService {
     return (count / total) * 100;
   }
 
+  static int _deltaFromPlan(PracticeRecord record) =>
+      record.actualEndSec - record.plannedDurationSec;
+
   static int _nonNegative(int value) => value < 0 ? 0 : value;
+
+  static int? _resolveBaselineSeconds(List<PracticeRecord> records) {
+    if (records.isEmpty) {
+      return null;
+    }
+
+    final first = records.first.plannedDurationSec;
+    final hasSameBaseline = records.every(
+      (record) => record.plannedDurationSec == first,
+    );
+    return hasSameBaseline ? first : null;
+  }
 
   static ({String label, double rate}) _findWeakSubject(
     List<PracticeRecord> records,
@@ -287,22 +306,26 @@ class DistributionBucket {
 class TrendChartData {
   const TrendChartData({
     required this.points,
+    required this.baselineSec,
     required this.maxAbsDeltaSec,
   });
 
   final List<TrendBarPoint> points;
+  final int? baselineSec;
   final int maxAbsDeltaSec;
 }
 
 class TrendBarPoint {
   const TrendBarPoint({
     required this.date,
+    required this.plannedDurationSec,
     required this.actualEndSec,
     required this.deltaSec,
     required this.displayDeltaSec,
   });
 
   final DateTime date;
+  final int plannedDurationSec;
   final int actualEndSec;
   final int deltaSec;
   final int displayDeltaSec;
